@@ -41,7 +41,7 @@ public class ListPartsArgs extends ObjectArgs {
   }
 
   /** Builder of {@link ListPartsArgs}. */
-  public static final class Builder extends BucketArgs.Builder<Builder, ListPartsArgs> {
+  public static final class Builder extends ObjectArgs.Builder<Builder, ListPartsArgs> {
     public Builder uploadId(String uploadId) {
       Utils.validateNotEmptyString(uploadId, "upload ID");
       operations.add(args -> args.uploadId = uploadId);

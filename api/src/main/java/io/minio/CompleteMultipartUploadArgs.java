@@ -132,6 +132,7 @@ public class CompleteMultipartUploadArgs extends ObjectArgs {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), uploadId, parts, ssec, delayMs, maxRetries);
+    return Objects.hash(
+        super.hashCode(), uploadId, Arrays.hashCode(parts), ssec, delayMs, maxRetries);
   }
 }

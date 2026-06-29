@@ -77,11 +77,12 @@ public class GetPresignedPostFormData {
             .post(multipartBuilder.build())
             .build();
     OkHttpClient httpClient = new OkHttpClient().newBuilder().build();
-    Response response = httpClient.newCall(request).execute();
-    if (response.isSuccessful()) {
-      System.out.println("Pictures/avatar.png is uploaded successfully using POST object");
-    } else {
-      System.out.println("Failed to upload Pictures/avatar.png");
+    try (Response response = httpClient.newCall(request).execute()) {
+      if (response.isSuccessful()) {
+        System.out.println("Pictures/avatar.png is uploaded successfully using POST object");
+      } else {
+        System.out.println("Failed to upload Pictures/avatar.png");
+      }
     }
 
     // Print curl command usage to upload file /tmp/userpic.jpg.

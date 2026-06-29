@@ -68,28 +68,30 @@ public class ProgressStream extends InputStream {
 
   @Override
   public int read() throws IOException {
-    this.pb.step();
-    return this.in.read();
+    int b = this.in.read();
+    if (b >= 0) this.pb.step(); // Only advance when a byte was actually read (not at EOF).
+    return b;
   }
 
   @Override
   public int read(byte[] toStore) throws IOException {
     int readBytes = this.in.read(toStore);
-    this.pb.stepBy(readBytes); // Update progress bar.
+    if (readBytes > 0) this.pb.stepBy(readBytes); // Don't step by the -1 EOF sentinel.
     return readBytes;
   }
 
   @Override
   public int read(byte[] toStore, int off, int len) throws IOException {
     int readBytes = this.in.read(toStore, off, len);
-    this.pb.stepBy(readBytes);
+    if (readBytes > 0) this.pb.stepBy(readBytes);
     return readBytes;
   }
 
   @Override
   public long skip(long n) throws IOException {
-    this.pb.stepTo(n);
-    return this.in.skip(n);
+    long skipped = this.in.skip(n);
+    this.pb.stepBy(skipped); // Advance by the bytes actually skipped, not an absolute position.
+    return skipped;
   }
 
   @Override

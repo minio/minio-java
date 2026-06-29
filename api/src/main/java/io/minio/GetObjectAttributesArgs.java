@@ -68,11 +68,17 @@ public class GetObjectAttributesArgs extends ObjectReadArgs {
     }
 
     public Builder maxParts(Integer maxParts) {
+      if (maxParts != null && maxParts < 1) {
+        throw new IllegalArgumentException("valid max parts must be provided");
+      }
       operations.add(args -> args.maxParts = maxParts);
       return this;
     }
 
     public Builder partNumberMarker(Integer partNumberMarker) {
+      if (partNumberMarker != null && partNumberMarker < 1) {
+        throw new IllegalArgumentException("valid part number marker must be provided");
+      }
       operations.add(args -> args.partNumberMarker = partNumberMarker);
       return this;
     }

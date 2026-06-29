@@ -107,6 +107,6 @@ public class PutObjectArgs extends PutObjectBaseArgs {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), stream, data);
+    return Objects.hash(super.hashCode(), stream, Arrays.hashCode(data));
   }
 }

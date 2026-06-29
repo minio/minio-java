@@ -156,7 +156,7 @@ public class Http {
       if (!Utils.HOSTNAME_REGEX.matcher(host).find()) return;
 
       if (Utils.AWS_ELB_ENDPOINT_REGEX.matcher(host).find()) {
-        String[] tokens = host.split("\\.elb\\.amazonaws\\.com", 1)[0].split("\\.");
+        String[] tokens = host.split("\\.elb\\.amazonaws\\.com")[0].split("\\.");
         this.region = tokens[tokens.length - 1];
         return;
       }
@@ -890,7 +890,7 @@ public class Http {
         .build();
   }
 
-  /** HTTP body of {@link RandomAccessFile}, {@link ByteBuffer} or {@link byte} array. */
+  /** HTTP body of {@link RandomAccessFile}, {@link ByteBuffer} or {@code byte} array. */
   public static class Body {
     private okhttp3.RequestBody requestBody;
     private RandomAccessFile file;

@@ -129,7 +129,7 @@ public class ReplicationConfiguration {
         id = id.trim();
         if (id.isEmpty()) throw new IllegalArgumentException("ID must be non-empty string");
         if (id.length() > 255)
-          throw new IllegalArgumentException("ID must be exceed 255 characters");
+          throw new IllegalArgumentException("ID must not exceed 255 characters");
       }
 
       this.status = Objects.requireNonNull(status, "Status must not be null");

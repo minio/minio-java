@@ -209,7 +209,9 @@ public class Crypto {
     boolean done = false;
     for (int nonceId = 1; !done; nonceId++) {
       int to = from + CHUNK_SIZE;
-      if (to > payload.length) {
+      // Use >= so a payload that is an exact multiple of CHUNK_SIZE marks its final full chunk as
+      // the last one, rather than emitting an extra empty trailing chunk (matches madmin-go/sio).
+      if (to >= payload.length) {
         additionalData = markAsLast(additionalData);
         to = payload.length;
         done = true;

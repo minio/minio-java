@@ -110,6 +110,8 @@ public class AwsConfigProvider extends EnvironmentProvider {
             section = new Properties();
             return result.put(header.substring(1, header.length() - 1), section);
           }
+          // Ignore key-value entries that appear before any [section] header.
+          if (section == null) return null;
           return section.put(key, value);
         }
 

@@ -65,24 +65,27 @@ public class SelectObjectContent {
         OutputSerialization.newCSV(
             null, null, null, OutputSerialization.QuoteFields.ASNEEDED, null);
 
-    SelectResponseStream stream =
+    try (SelectResponseStream stream =
         minioClient.selectObjectContent(
             SelectObjectContentArgs.builder()
                 .bucket("my-bucket")
-                .object("my-objectName")
+                .object("my-object")
                 .sqlExpression(sqlExpression)
                 .inputSerialization(is)
                 .outputSerialization(os)
                 .requestProgress(true)
-                .build());
+                .build())) {
 
-    byte[] buf = new byte[512];
-    int bytesRead = stream.read(buf, 0, buf.length);
-    System.out.println(new String(buf, 0, bytesRead, StandardCharsets.UTF_8));
-    Stats stats = stream.stats();
-    System.out.println("bytes scanned: " + stats.bytesScanned());
-    System.out.println("bytes processed: " + stats.bytesProcessed());
-    System.out.println("bytes returned: " + stats.bytesReturned());
-    stream.close();
+      byte[] buf = new byte[512];
+      int bytesRead;
+      while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+        System.out.print(new String(buf, 0, bytesRead, StandardCharsets.UTF_8));
+      }
+
+      Stats stats = stream.stats();
+      System.out.println("bytes scanned: " + stats.bytesScanned());
+      System.out.println("bytes processed: " + stats.bytesProcessed());
+      System.out.println("bytes returned: " + stats.bytesReturned());
+    }
   }
 }

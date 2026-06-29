@@ -1,1 +1,14 @@
-* text eol=lf
+# Normalize text files to LF, but let Git auto-detect binaries so they are
+# stored byte-for-byte (a blanket "* text" corrupts binaries like the Gradle
+# wrapper jar by stripping CR bytes during line-ending normalization).
+* text=auto eol=lf
+
+# Always treat these as binary regardless of auto-detection.
+*.jar binary
+*.zip binary
+*.gz binary
+*.class binary
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary

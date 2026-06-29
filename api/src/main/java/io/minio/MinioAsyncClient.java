@@ -94,7 +94,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -343,11 +346,12 @@ public class MinioAsyncClient extends BaseS3Client {
       GetObjectResponse getObjectResponse)
       throws MinioException {
     OutputStream os = null;
+    Path tempFilePath = null;
     try {
       Path filePath = Paths.get(filename);
       String tempFilename =
           filename + "." + Utils.encode(headObjectResponse.etag()) + ".part.minio";
-      Path tempFilePath = Paths.get(tempFilename);
+      tempFilePath = Paths.get(tempFilename);
       if (Files.exists(tempFilePath)) Files.delete(tempFilePath);
       os = Files.newOutputStream(tempFilePath, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
       long bytesWritten = ByteStreams.copy(getObjectResponse, os);
@@ -373,6 +377,17 @@ public class MinioAsyncClient extends BaseS3Client {
         if (os != null) os.close();
       } catch (IOException e) {
         throw new MinioException(e);
+      } finally {
+        // Remove the partially-written temp file if it was not moved to its destination.
+        if (tempFilePath != null) {
+          try {
+            Files.deleteIfExists(tempFilePath);
+          } catch (IOException e) {
+            // best-effort cleanup; log and continue.
+            Logger.getLogger(MinioAsyncClient.class.getName())
+                .log(Level.WARNING, "failed to delete temporary file " + tempFilePath, e);
+          }
+        }
       }
     }
   }
@@ -408,7 +423,7 @@ public class MinioAsyncClient extends BaseS3Client {
                 downloadObject(filename, args.overwrite(), headObjectResponse, getObjectResponse);
                 return null;
               } catch (MinioException e) {
-                return Utils.failedFuture(e);
+                throw new CompletionException(e);
               }
             })
         .thenAccept(nullValue -> {});
@@ -728,7 +743,8 @@ public class MinioAsyncClient extends BaseS3Client {
         final int finalPartNumber = partNumber;
         future =
             future.thenCombine(
-                uploadPartCopy(new UploadPartCopyArgs(args, uploadId, finalPartNumber, headers)),
+                uploadPartCopy(
+                    new UploadPartCopyArgs(args, uploadId, finalPartNumber, finalHeaders)),
                 (parts, response) -> {
                   parts[response.partNumber() - 1] = response.part();
                   return parts;
@@ -1861,12 +1877,22 @@ public class MinioAsyncClient extends BaseS3Client {
                           while (!errorOccurred.get()) {
                             UploadPartArgs.Wrapper part = queue.take();
                             if (part.args() == null) break; // poison pill
-                            UploadPartResponse response = uploadPart(part.args()).join();
-                            bufferPool.put(part.args().buffer());
-                            uploadResults.add(response);
+                            try {
+                              UploadPartResponse response = uploadPart(part.args()).join();
+                              uploadResults.add(response);
+                            } finally {
+                              // Always return the buffer to the pool, even on upload failure.
+                              bufferPool.put(part.args().buffer());
+                            }
                           }
                         } catch (InterruptedException e) {
+                          Thread.currentThread().interrupt();
                           errorOccurred.set(true); // signal to all threads
+                          exceptions.add(e);
+                        } catch (RuntimeException e) {
+                          // uploadPart().join() failures surface as CompletionException here;
+                          // signal other threads and the reader so the upload aborts cleanly.
+                          errorOccurred.set(true);
                           exceptions.add(e);
                         } finally {
                           doneLatch.countDown();
@@ -1879,7 +1905,9 @@ public class MinioAsyncClient extends BaseS3Client {
             }
 
             // Reader: submit initial buffer
-            queue.put(
+            offerUntilDoneOrError(
+                queue,
+                errorOccurred,
                 new UploadPartArgs.Wrapper(
                     new UploadPartArgs(
                         args,
@@ -1893,7 +1921,9 @@ public class MinioAsyncClient extends BaseS3Client {
             while (partReader.partNumber() != partReader.partCount() && !errorOccurred.get()) {
               ByteBuffer buf = bufferPool.take();
               partReader.read(buf);
-              queue.put(
+              offerUntilDoneOrError(
+                  queue,
+                  errorOccurred,
                   new UploadPartArgs.Wrapper(
                       new UploadPartArgs(
                           args,
@@ -1906,7 +1936,7 @@ public class MinioAsyncClient extends BaseS3Client {
 
             // Signal all workers to stop with poison pills
             for (int i = 0; i < parallelUploads; i++) {
-              queue.put(new UploadPartArgs.Wrapper(null));
+              offerUntilDoneOrError(queue, errorOccurred, new UploadPartArgs.Wrapper(null));
             }
 
             doneLatch.await();
@@ -1928,6 +1958,20 @@ public class MinioAsyncClient extends BaseS3Client {
             uploadExecutor.shutdownNow(); // ensure executor exits on error
           }
         });
+  }
+
+  /**
+   * Offers an item to the queue, retrying until it is accepted or an error has been signalled by a
+   * worker. Prevents the reader from blocking forever on a full queue once all workers have died.
+   */
+  private static void offerUntilDoneOrError(
+      BlockingQueue<UploadPartArgs.Wrapper> queue,
+      AtomicBoolean errorOccurred,
+      UploadPartArgs.Wrapper item)
+      throws InterruptedException {
+    while (!queue.offer(item, 200, TimeUnit.MILLISECONDS)) {
+      if (errorOccurred.get()) return;
+    }
   }
 
   private CompletableFuture<ObjectWriteResponse> putObject(
@@ -3319,11 +3363,32 @@ public class MinioAsyncClient extends BaseS3Client {
                 throw new IllegalArgumentException(
                     "tarball size " + length + " is more than maximum allowed 5TiB");
               }
-              try (RandomAccessFile file = new RandomAccessFile(args.stagingFilename(), "r")) {
-                return putObject(new PutObjectAPIArgs(args, file, length, headers));
+              final RandomAccessFile file;
+              try {
+                file = new RandomAccessFile(args.stagingFilename(), "r");
               } catch (IOException e) {
                 throw new CompletionException(new MinioException(e));
               }
+              return putObject(new PutObjectAPIArgs(args, file, length, headers))
+                  .exceptionally(
+                      e -> {
+                        e = e.getCause();
+                        try {
+                          file.close();
+                        } catch (IOException ex) {
+                          e.addSuppressed(new MinioException(ex));
+                        }
+                        throw new CompletionException(e);
+                      })
+                  .thenApply(
+                      response -> {
+                        try {
+                          file.close();
+                        } catch (IOException e) {
+                          throw new CompletionException(new MinioException(e));
+                        }
+                        return response;
+                      });
             });
   }
 
@@ -3666,19 +3731,38 @@ public class MinioAsyncClient extends BaseS3Client {
                       addSha256Checksum);
                 }
 
-                RandomAccessFile file = new RandomAccessFile(args.filename(), "r");
+                final RandomAccessFile file = new RandomAccessFile(args.filename(), "r");
                 return appendObject(
-                    args,
-                    writeOffset,
-                    null,
-                    null,
-                    null,
-                    args.length(),
-                    file,
-                    partSize,
-                    hashers,
-                    addContentSha256,
-                    addSha256Checksum);
+                        args,
+                        writeOffset,
+                        null,
+                        null,
+                        null,
+                        args.length(),
+                        file,
+                        partSize,
+                        hashers,
+                        addContentSha256,
+                        addSha256Checksum)
+                    .exceptionally(
+                        e -> {
+                          e = e.getCause();
+                          try {
+                            file.close();
+                          } catch (IOException ex) {
+                            e.addSuppressed(new MinioException(ex));
+                          }
+                          throw new CompletionException(e);
+                        })
+                    .thenApply(
+                        resp -> {
+                          try {
+                            file.close();
+                          } catch (IOException e) {
+                            throw new CompletionException(new MinioException(e));
+                          }
+                          return resp;
+                        });
               } catch (MinioException e) {
                 return Utils.failedFuture(e);
               } catch (IOException e) {

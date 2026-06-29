@@ -75,7 +75,9 @@ public class GetDataUsageInfoResponse {
   }
 
   public Map<String, BucketTargetUsageInfo> objectsReplicationInfo() {
-    return Collections.unmodifiableMap(this.objectsReplicationInfo);
+    return this.objectsReplicationInfo == null
+        ? Collections.emptyMap()
+        : Collections.unmodifiableMap(this.objectsReplicationInfo);
   }
 
   public long bucketsCount() {
@@ -83,11 +85,15 @@ public class GetDataUsageInfoResponse {
   }
 
   public Map<String, BucketUsageInfo> bucketsUsageInfo() {
-    return Collections.unmodifiableMap(this.bucketsUsageInfo);
+    return this.bucketsUsageInfo == null
+        ? Collections.emptyMap()
+        : Collections.unmodifiableMap(this.bucketsUsageInfo);
   }
 
   public Map<String, Long> bucketsSizes() {
-    return Collections.unmodifiableMap(bucketsSizes);
+    return bucketsSizes == null
+        ? Collections.emptyMap()
+        : Collections.unmodifiableMap(bucketsSizes);
   }
 
   public AllTierStats tierStats() {
@@ -203,7 +209,9 @@ public class GetDataUsageInfoResponse {
     }
 
     public Map<String, Long> objectsSizesHistogram() {
-      return Collections.unmodifiableMap(this.objectsSizesHistogram);
+      return this.objectsSizesHistogram == null
+          ? Collections.emptyMap()
+          : Collections.unmodifiableMap(this.objectsSizesHistogram);
     }
 
     public long versionsCount() {
@@ -215,7 +223,9 @@ public class GetDataUsageInfoResponse {
     }
 
     public Map<String, BucketTargetUsageInfo> objectsReplicationInfo() {
-      return Collections.unmodifiableMap(this.objectsReplicationInfo);
+      return this.objectsReplicationInfo == null
+          ? Collections.emptyMap()
+          : Collections.unmodifiableMap(this.objectsReplicationInfo);
     }
   }
 
@@ -249,7 +259,7 @@ public class GetDataUsageInfoResponse {
     private Map<String, TierStats> tiers;
 
     public Map<String, TierStats> tiers() {
-      return Collections.unmodifiableMap(this.tiers);
+      return this.tiers == null ? Collections.emptyMap() : Collections.unmodifiableMap(this.tiers);
     }
   }
 }

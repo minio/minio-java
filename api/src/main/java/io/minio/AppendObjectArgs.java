@@ -135,6 +135,7 @@ public class AppendObjectArgs extends ObjectArgs {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), filename, stream, data, length, chunkSize);
+    return Objects.hash(
+        super.hashCode(), filename, stream, Arrays.hashCode(data), length, chunkSize);
   }
 }

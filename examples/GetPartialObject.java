@@ -40,23 +40,22 @@ public class GetPartialObject {
 
     // Get input stream to have content of 'my-object' from 'my-bucket' starts from
     // byte position 1024 and length 4096.
-    InputStream stream =
+    // try-with-resources closes the stream (releasing the network connection) even on read error.
+    try (InputStream stream =
         minioClient.getObject(
             GetObjectArgs.builder()
                 .bucket("my-bucket")
                 .object("my-object")
                 .offset(1024L)
                 .length(4096L)
-                .build());
+                .build())) {
 
-    // Read the input stream and print to the console till EOF.
-    byte[] buf = new byte[16384];
-    int bytesRead;
-    while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-      System.out.println(new String(buf, 0, bytesRead, StandardCharsets.UTF_8));
+      // Read the input stream and print to the console till EOF.
+      byte[] buf = new byte[16384];
+      int bytesRead;
+      while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+        System.out.println(new String(buf, 0, bytesRead, StandardCharsets.UTF_8));
+      }
     }
-
-    // Close the input stream.
-    stream.close();
   }
 }
