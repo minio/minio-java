@@ -65,8 +65,9 @@ subprojects {
     [compileJava, compileTestJava].each() {
         it.options.fork = true
         // Build runs on JDK 25 (see java.toolchain) but enforces the Java 8 API surface and
-        // emits Java 8 bytecode via --release 8. --release also avoids the "source/target 8 is
-        // obsolete" warning; -Xlint:-options is kept as a belt-and-braces guard for -Werror.
+        // emits Java 8 bytecode via --release 8. JDK 25's javac still warns that source/target 8
+        // is obsolete, so the -Xlint:-options below is required rather than optional: without it
+        // -Werror turns that warning into a build failure.
         it.options.release = 8
         it.options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation', '-Xlint:-options', '-Werror', '-Xdiags:verbose']
         it.options.encoding = 'UTF-8'
