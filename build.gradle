@@ -101,6 +101,10 @@ subprojects {
 
     tasks.register('localeTest', Test) {
         description = 'Runs tests with locale de-DE'
+        // A Test task registered this way has no test classes of its own; without these two
+        // lines it reports NO-SOURCE and runs nothing.
+        testClassesDirs = sourceSets.test.output.classesDirs
+        classpath = sourceSets.test.runtimeClasspath
         systemProperty 'user.language', 'de'
         systemProperty 'user.country', 'DE'
     }
