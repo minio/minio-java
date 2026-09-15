@@ -41,7 +41,7 @@ public class ListPartsArgs extends ObjectArgs {
   }
 
   /** Builder of {@link ListPartsArgs}. */
-  public static final class Builder extends BucketArgs.Builder<Builder, ListPartsArgs> {
+  public static final class Builder extends ObjectArgs.Builder<Builder, ListPartsArgs> {
     public Builder uploadId(String uploadId) {
       Utils.validateNotEmptyString(uploadId, "upload ID");
       operations.add(args -> args.uploadId = uploadId);
@@ -50,7 +50,7 @@ public class ListPartsArgs extends ObjectArgs {
 
     public Builder maxParts(Integer maxParts) {
       if (maxParts != null && maxParts < 1) {
-        throw new IllegalArgumentException("valid max parts must be provided");
+        throw new IllegalArgumentException("max parts must be greater than 0");
       }
 
       operations.add(args -> args.maxParts = maxParts);
@@ -58,8 +58,10 @@ public class ListPartsArgs extends ObjectArgs {
     }
 
     public Builder partNumberMarker(Integer partNumberMarker) {
-      if (partNumberMarker != null && (partNumberMarker < 1 || partNumberMarker > 10000)) {
-        throw new IllegalArgumentException("valid part number marker must be provided");
+      if (partNumberMarker != null
+          && (partNumberMarker < 1 || partNumberMarker > ObjectWriteArgs.MAX_MULTIPART_COUNT)) {
+        throw new IllegalArgumentException(
+            "part number marker must be between 1 and " + ObjectWriteArgs.MAX_MULTIPART_COUNT);
       }
       operations.add(args -> args.partNumberMarker = partNumberMarker);
       return this;

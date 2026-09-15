@@ -492,15 +492,22 @@ public class TestMinioClient extends TestArgs {
     try {
       int count = 7;
       Thread[] threads = new Thread[count];
+      PutObjectRunnable[] runnables = new PutObjectRunnable[count];
 
       for (int i = 0; i < count; i++) {
-        threads[i] = new Thread(new PutObjectRunnable(client, bucketName, createFile6Mb()));
+        runnables[i] = new PutObjectRunnable(client, bucketName, createFile6Mb());
+        threads[i] = new Thread(runnables[i]);
       }
 
       for (int i = 0; i < count; i++) threads[i].start();
 
       // Waiting for threads to complete.
       for (int i = 0; i < count; i++) threads[i].join();
+
+      // Fail the test if any thread's upload/cleanup threw.
+      for (int i = 0; i < count; i++) {
+        if (runnables[i].exception() != null) throw runnables[i].exception();
+      }
 
       // All threads are completed.
       mintSuccessLog(methodName, testTags, startTime);
@@ -951,13 +958,16 @@ public class TestMinioClient extends TestArgs {
       if (sse != null) builder.sse(sse);
       client.putObject(builder.build());
       client.downloadObject(args);
-      Files.delete(Paths.get(args.filename()));
       mintSuccessLog(methodName, testTags, startTime);
     } catch (Exception e) {
       handleException(methodName, testTags, startTime, e);
     } finally {
-      client.removeObject(
-          RemoveObjectArgs.builder().bucket(args.bucket()).object(args.object()).build());
+      try {
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(args.bucket()).object(args.object()).build());
+      } finally {
+        Files.deleteIfExists(Paths.get(args.filename()));
+      }
     }
   }
 
@@ -1333,10 +1343,11 @@ public class TestMinioClient extends TestArgs {
       String urlString = client.getPresignedObjectUrl(args);
       try {
         writeObject(urlString, data);
-        InputStream is =
+        try (InputStream is =
             client.getObject(
-                GetObjectArgs.builder().bucket(args.bucket()).object(args.object()).build());
-        data = readAllBytes(is);
+                GetObjectArgs.builder().bucket(args.bucket()).object(args.object()).build())) {
+          data = readAllBytes(is);
+        }
         String checksum = getSha256Sum(new ByteArrayInputStream(data), data.length);
         Assertions.assertEquals(
             expectedChecksum,
@@ -1943,6 +1954,9 @@ public class TestMinioClient extends TestArgs {
         }
       } catch (Exception e) {
         handleException(methodName, null, startTime, e);
+        // Setup failed; skip the dependent tests (object names may be null). The finally below
+        // still cleans up any objects that were created.
+        return;
       }
 
       composeObjectTests(object1Mb, object6Mb, object6MbSsec);
@@ -2022,14 +2036,8 @@ public class TestMinioClient extends TestArgs {
                         new ContentInputStream(1 * KB), 1L * KB, null)
                     .build());
 
+        checkObjectLegalHold(bucketNameWithLock, objectName, true);
         checkObjectLegalHold(bucketNameWithLock, objectName, false);
-        client.enableObjectLegalHold(
-            EnableObjectLegalHoldArgs.builder()
-                .bucket(bucketNameWithLock)
-                .object(objectName)
-                .build());
-        checkObjectLegalHold(bucketNameWithLock, objectName, false);
-        mintSuccessLog(methodName, null, startTime);
       } finally {
         if (objectInfo != null) {
           client.removeObject(
@@ -2071,7 +2079,6 @@ public class TestMinioClient extends TestArgs {
         Assertions.assertFalse(result, "object legal hold: expected: false, got: " + result);
         checkObjectLegalHold(bucketNameWithLock, objectName, true);
         checkObjectLegalHold(bucketNameWithLock, objectName, false);
-        mintSuccessLog(methodName, null, startTime);
       } finally {
         if (objectInfo != null) {
           client.removeObject(
@@ -2610,6 +2617,19 @@ public class TestMinioClient extends TestArgs {
     }
   }
 
+  /**
+   * Returns the value of the named rule ("prefix" or "suffix") in the filter, or null when the
+   * filter or the rule is absent. Rules are looked up by name rather than by index so the check
+   * does not depend on the server preserving their order.
+   */
+  private static String filterRuleValue(NotificationConfiguration.Filter filter, String name) {
+    if (filter == null || filter.rules() == null) return null;
+    for (NotificationConfiguration.FilterRule rule : filter.rules()) {
+      if (name.equals(rule.name())) return rule.value();
+    }
+    return null;
+  }
+
   public void getBucketNotification() throws Exception {
     String methodName = "getBucketNotification()";
     long startTime = System.currentTimeMillis();
@@ -2649,8 +2669,12 @@ public class TestMinioClient extends TestArgs {
             || config.queueConfigurations().get(0).events().size() != 1
             || !EventType.OBJECT_CREATED_PUT
                 .toString()
-                .equals(config.queueConfigurations().get(0).events().get(0))) {
-          System.out.println(
+                .equals(config.queueConfigurations().get(0).events().get(0))
+            || !"images"
+                .equals(filterRuleValue(config.queueConfigurations().get(0).filter(), "prefix"))
+            || !"pg"
+                .equals(filterRuleValue(config.queueConfigurations().get(0).filter(), "suffix"))) {
+          throw new Exception(
               "config: expected: " + Xml.marshal(expectedConfig) + ", got: " + Xml.marshal(config));
         }
       } finally {
@@ -2703,7 +2727,7 @@ public class TestMinioClient extends TestArgs {
             client.getBucketNotification(
                 GetBucketNotificationArgs.builder().bucket(bucketName).build());
         if (config.queueConfigurations().size() != 0) {
-          System.out.println("config: expected: <empty>, got: " + Xml.marshal(config));
+          throw new Exception("config: expected: <empty>, got: " + Xml.marshal(config));
         }
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -2825,10 +2849,10 @@ public class TestMinioClient extends TestArgs {
       Assertions.assertNotNull(stats, "stats is null");
       Assertions.assertTrue(
           stats.bytesScanned() == 256,
-          "stats.bytesScanned mismatch; expected: 258, got: " + stats.bytesScanned());
+          "stats.bytesScanned mismatch; expected: 256, got: " + stats.bytesScanned());
       Assertions.assertTrue(
           stats.bytesProcessed() == 256,
-          "stats.bytesProcessed mismatch; expected: 258, got: " + stats.bytesProcessed());
+          "stats.bytesProcessed mismatch; expected: 256, got: " + stats.bytesProcessed());
       Assertions.assertTrue(
           stats.bytesReturned() == 222,
           "stats.bytesReturned mismatch; expected: 222, got: " + stats.bytesReturned());

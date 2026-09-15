@@ -156,7 +156,7 @@ public class Http {
       if (!Utils.HOSTNAME_REGEX.matcher(host).find()) return;
 
       if (Utils.AWS_ELB_ENDPOINT_REGEX.matcher(host).find()) {
-        String[] tokens = host.split("\\.elb\\.amazonaws\\.com", 1)[0].split("\\.");
+        String[] tokens = host.split("\\.elb\\.amazonaws\\.com")[0].split("\\.");
         this.region = tokens[tokens.length - 1];
         return;
       }
@@ -915,14 +915,14 @@ public class Http {
         MediaType contentType,
         String sha256Hash,
         String md5Hash) {
-      if (length < 0) throw new IllegalArgumentException("valid length must be provided");
+      if (length < 0) throw new IllegalArgumentException("length must not be negative");
       this.file = file;
       set(length, contentType, sha256Hash, md5Hash);
     }
 
     /** Creates Body for byte array. */
     public Body(byte[] data, int length, MediaType contentType, String sha256Hash, String md5Hash) {
-      if (length < 0) throw new IllegalArgumentException("valid length must be provided");
+      if (length < 0) throw new IllegalArgumentException("length must not be negative");
       this.data = data;
       set((long) length, contentType, sha256Hash, md5Hash);
     }

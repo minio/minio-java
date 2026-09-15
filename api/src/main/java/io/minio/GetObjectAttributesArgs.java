@@ -68,11 +68,19 @@ public class GetObjectAttributesArgs extends ObjectReadArgs {
     }
 
     public Builder maxParts(Integer maxParts) {
+      if (maxParts != null && maxParts < 1) {
+        throw new IllegalArgumentException("max parts must be greater than 0");
+      }
       operations.add(args -> args.maxParts = maxParts);
       return this;
     }
 
     public Builder partNumberMarker(Integer partNumberMarker) {
+      // Matches minio-go, which sends x-amz-part-number-marker only when the value is positive
+      // and imposes no upper bound. Null means unset; zero and negatives carry no meaning.
+      if (partNumberMarker != null && partNumberMarker <= 0) {
+        throw new IllegalArgumentException("part number marker must be greater than 0");
+      }
       operations.add(args -> args.partNumberMarker = partNumberMarker);
       return this;
     }

@@ -77,9 +77,11 @@ public class PutObjectUiProgressBar extends JFrame {
           new ProgressMonitorInputStream(this, "Uploading... " + file.getAbsolutePath(), bis);
 
       pmis.getProgressMonitor().setMillisToPopup(10);
+      // Use the actual file length as the object size; available() is only a hint, not a reliable
+      // size.
       minioClient.putObject(
           PutObjectArgs.builder().bucket("bank").object("my-object").stream(
-                  pmis, (long) pmis.available(), null)
+                  pmis, file.length(), null)
               .build());
       System.out.println("my-object is uploaded successfully");
     } catch (FileNotFoundException e) {

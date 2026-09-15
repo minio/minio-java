@@ -57,7 +57,7 @@ public class UploadPartCopyArgs extends ObjectArgs {
       super.validate(args);
       Utils.validateNotEmptyString(args.uploadId, "upload ID");
       if (args.partNumber <= 0) {
-        throw new IllegalArgumentException("valid part number must be provided");
+        throw new IllegalArgumentException("part number must be greater than 0");
       }
       Utils.validateNotNull(args.headers, "headers");
     }
@@ -69,7 +69,7 @@ public class UploadPartCopyArgs extends ObjectArgs {
     }
 
     public Builder partNumber(int partNumber) {
-      if (partNumber <= 0) throw new IllegalArgumentException("valid part number must be provided");
+      if (partNumber <= 0) throw new IllegalArgumentException("part number must be greater than 0");
       operations.add(args -> args.partNumber = partNumber);
       return this;
     }

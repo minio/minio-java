@@ -120,8 +120,7 @@ public abstract class PutObjectAPIBaseArgs extends ObjectArgs {
       extends ObjectArgs.Builder<B, A> {
     protected void validate(A args) {
       super.validate(args);
-      if (!((args.file != null) != (args.buffer != null) != (args.data != null)
-          && !(args.file != null && args.buffer != null && args.data != null))) {
+      if (!Utils.exactlyOneNonNull(args.file, args.buffer, args.data)) {
         throw new IllegalArgumentException("only one of file, buffer or data must be provided");
       }
     }
@@ -136,7 +135,7 @@ public abstract class PutObjectAPIBaseArgs extends ObjectArgs {
 
     public B file(RandomAccessFile file, long length) {
       Utils.validateNotNull(file, "file");
-      if (length < 0) throw new IllegalArgumentException("valid length must be provided");
+      if (length < 0) throw new IllegalArgumentException("length must not be negative");
       return setData(file, null, null, length);
     }
 
@@ -147,7 +146,7 @@ public abstract class PutObjectAPIBaseArgs extends ObjectArgs {
 
     public B data(byte[] data, int length) {
       Utils.validateNotNull(data, "data");
-      if (length < 0) throw new IllegalArgumentException("valid length must be provided");
+      if (length < 0) throw new IllegalArgumentException("length must not be negative");
       return setData(null, null, data, (long) length);
     }
 
@@ -172,6 +171,6 @@ public abstract class PutObjectAPIBaseArgs extends ObjectArgs {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), file, buffer, data, length, headers);
+    return Objects.hash(super.hashCode(), file, buffer, Arrays.hashCode(data), length, headers);
   }
 }

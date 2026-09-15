@@ -72,7 +72,8 @@ public class AccessControlPolicy {
           return "authenticated-read";
         }
         if ("http://acs.amazonaws.com/groups/global/AllUsers".equals(uri)) return "public-read";
-        if (owner.id() != null
+        if (owner != null
+            && owner.id() != null
             && grant.granteeId() != null
             && owner.id().equals(grant.granteeId())) {
           return "bucket-owner-read";

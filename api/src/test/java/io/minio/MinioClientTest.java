@@ -363,6 +363,65 @@ public class MinioClientTest {
                 .build());
     Assert.assertEquals(
         "https://s3-accelerate.dualstack.amazonaws.com.cn/mybucket/myobject", url.split("\\?")[0]);
+
+    // ELB endpoint checks. The region is the label before ".elb.amazonaws.com". The host is used
+    // verbatim in path-style, so the region reaches the request only through the SigV4 credential
+    // scope; splitting the host with a limit of 1 returns it unsplit and yields "com".
+    client =
+        MinioClient.builder()
+            .endpoint("https://my-lb-1234567890.us-east-1.elb.amazonaws.com")
+            .credentials("myaccesskey", "mysecretkey")
+            .build();
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Http.Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
+    Assert.assertEquals(
+        "https://my-lb-1234567890.us-east-1.elb.amazonaws.com/mybucket/myobject",
+        url.split("\\?")[0]);
+    Assert.assertTrue(
+        "us-east-1 credential scope expected in " + url,
+        url.contains("%2Fus-east-1%2Fs3%2Faws4_request"));
+
+    client =
+        MinioClient.builder()
+            .endpoint("https://my-lb-1234567890.eu-west-2.elb.amazonaws.com")
+            .credentials("myaccesskey", "mysecretkey")
+            .build();
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Http.Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
+    Assert.assertEquals(
+        "https://my-lb-1234567890.eu-west-2.elb.amazonaws.com/mybucket/myobject",
+        url.split("\\?")[0]);
+    Assert.assertTrue(
+        "eu-west-2 credential scope expected in " + url,
+        url.contains("%2Feu-west-2%2Fs3%2Faws4_request"));
+
+    client =
+        MinioClient.builder()
+            .endpoint("https://lb.ap-southeast-1.elb.amazonaws.com")
+            .credentials("myaccesskey", "mysecretkey")
+            .build();
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Http.Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
+    Assert.assertEquals(
+        "https://lb.ap-southeast-1.elb.amazonaws.com/mybucket/myobject", url.split("\\?")[0]);
+    Assert.assertTrue(
+        "ap-southeast-1 credential scope expected in " + url,
+        url.contains("%2Fap-southeast-1%2Fs3%2Faws4_request"));
   }
 
   @Test

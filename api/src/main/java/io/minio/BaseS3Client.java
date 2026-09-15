@@ -406,12 +406,13 @@ public abstract class BaseS3Client implements AutoCloseable {
                 if (!s3request.method().equals(Http.Method.HEAD)
                     && (contentType == null
                         || !Arrays.asList(contentType.split(";")).contains("application/xml"))) {
-                  if (response.code() == 304 && response.body().contentLength() == 0) {
+                  if (response.code() == 304 && errorXml.isEmpty()) {
                     completableFuture.completeExceptionally(
                         new ServerException(
                             "server failed with HTTP status code " + response.code(),
                             response.code(),
                             traceBuilder.toString()));
+                    return;
                   }
 
                   completableFuture.completeExceptionally(
@@ -475,8 +476,8 @@ public abstract class BaseS3Client implements AutoCloseable {
                       break;
                     case 409:
                       if (s3request.bucket() != null) {
-                        code = NO_SUCH_BUCKET;
-                        message = NO_SUCH_BUCKET_MESSAGE;
+                        code = "Conflict";
+                        message = "Request conflicts with the bucket's current state";
                       } else {
                         code = "ResourceConflict";
                         message = "Request resource conflicts";
@@ -560,7 +561,7 @@ public abstract class BaseS3Client implements AutoCloseable {
     return executeAsync(s3request)
         .exceptionally(
             e -> {
-              e = e.getCause();
+              if (e instanceof CompletionException) e = e.getCause();
               if (e instanceof ErrorResponseException
                   && ((ErrorResponseException) e).errorResponse().code().equals(RETRY_HEAD)) {
                 return null;

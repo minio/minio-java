@@ -43,14 +43,16 @@ public class PutObjectProgressBar {
     String objectName = "my-object";
     String bucketName = "my-bucket";
 
-    InputStream pis =
+    // Use the actual file length as the object size; available() is only a hint, not a reliable
+    // size.
+    long size = Files.size(Paths.get("my-filename"));
+    try (InputStream pis =
         new BufferedInputStream(
-            new ProgressStream("Uploading... ", Files.newInputStream(Paths.get("my-filename"))));
-    minioClient.putObject(
-        PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                pis, (long) pis.available(), null)
-            .build());
-    pis.close();
+            new ProgressStream("Uploading... ", Files.newInputStream(Paths.get("my-filename"))))) {
+      minioClient.putObject(
+          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(pis, size, null)
+              .build());
+    }
     System.out.println("my-object is uploaded successfully");
   }
 }

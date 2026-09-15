@@ -101,7 +101,7 @@ public class AppendObjectArgs extends ObjectArgs {
 
     public Builder data(byte[] data, int length) {
       if (data != null && length <= 0) {
-        throw new IllegalArgumentException("valid length must be provided");
+        throw new IllegalArgumentException("length must be greater than 0");
       }
       return setStream(null, null, data, data == null ? null : (long) length);
     }
@@ -135,6 +135,7 @@ public class AppendObjectArgs extends ObjectArgs {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), filename, stream, data, length, chunkSize);
+    return Objects.hash(
+        super.hashCode(), filename, stream, Arrays.hashCode(data), length, chunkSize);
   }
 }

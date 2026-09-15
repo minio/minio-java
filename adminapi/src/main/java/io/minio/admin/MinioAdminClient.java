@@ -167,10 +167,12 @@ public class MinioAdminClient {
   }
 
   private Response httpExecute(
-      Http.Method method, Command command, Multimap<String, String> queryParamMap, byte[] body)
+      Http.Method method,
+      Command command,
+      Multimap<String, String> queryParamMap,
+      byte[] body,
+      Credentials creds)
       throws IOException, MinioException {
-    Credentials creds = getCredentials();
-
     HttpUrl.Builder urlBuilder =
         this.baseUrl
             .newBuilder()
@@ -224,7 +226,21 @@ public class MinioAdminClient {
       Http.Method method, Command command, Multimap<String, String> queryParamMap, byte[] body)
       throws MinioException {
     try {
-      return httpExecute(method, command, queryParamMap, body);
+      return httpExecute(method, command, queryParamMap, body, getCredentials());
+    } catch (IOException e) {
+      throw new MinioException(e);
+    }
+  }
+
+  private Response execute(
+      Http.Method method,
+      Command command,
+      Multimap<String, String> queryParamMap,
+      byte[] body,
+      Credentials creds)
+      throws MinioException {
+    try {
+      return httpExecute(method, command, queryParamMap, body, creds);
     } catch (IOException e) {
       throw new MinioException(e);
     }
@@ -258,7 +274,8 @@ public class MinioAdminClient {
             Http.Method.PUT,
             Command.ADD_USER,
             ImmutableMultimap.of("accessKey", accessKey),
-            Crypto.encrypt(OBJECT_MAPPER.writeValueAsBytes(userInfo), creds.secretKey()))) {
+            Crypto.encrypt(OBJECT_MAPPER.writeValueAsBytes(userInfo), creds.secretKey()),
+            creds)) {
     } catch (JsonProcessingException e) {
       throw new MinioException(e);
     }
@@ -292,8 +309,8 @@ public class MinioAdminClient {
    * @throws MinioException thrown to indicate SDK exception.
    */
   public Map<String, UserInfo> listUsers() throws MinioException {
-    try (Response response = execute(Http.Method.GET, Command.LIST_USERS, null, null)) {
-      Credentials creds = getCredentials();
+    Credentials creds = getCredentials();
+    try (Response response = execute(Http.Method.GET, Command.LIST_USERS, null, null, creds)) {
       byte[] jsonData = Crypto.decrypt(response.body().byteStream(), creds.secretKey());
       MapType mapType =
           OBJECT_MAPPER
@@ -453,14 +470,15 @@ public class MinioAdminClient {
           OBJECT_MAPPER
               .getTypeFactory()
               .constructMapType(HashMap.class, String.class, JsonNode.class);
-      return OBJECT_MAPPER
-          .<Map<String, JsonNode>>readValue(response.body().bytes(), mapType)
-          .entrySet()
-          .stream()
-          .filter(entry -> "quota".equals(entry.getKey()))
-          .findFirst()
-          .map(entry -> Long.valueOf(entry.getValue().toString()))
-          .orElseThrow(() -> new IllegalArgumentException("found not quota"));
+      Map<String, JsonNode> quotaEntity = OBJECT_MAPPER.readValue(response.body().bytes(), mapType);
+      JsonNode quota = quotaEntity.get("quota");
+      if (quota == null) throw new MinioException("quota not found in response");
+      // JsonNode.asLong() coerces anything non-numeric to zero, making a malformed response
+      // indistinguishable from a cleared quota; reject such values instead.
+      if (!quota.isIntegralNumber() || !quota.canConvertToLong()) {
+        throw new MinioException("invalid quota value " + quota + " in response");
+      }
+      return quota.longValue();
     } catch (IOException e) {
       throw new MinioException(e);
     }
@@ -676,7 +694,8 @@ public class MinioAdminClient {
             Http.Method.PUT,
             Command.ADD_SERVICE_ACCOUNT,
             null,
-            Crypto.encrypt(OBJECT_MAPPER.writeValueAsBytes(serviceAccount), creds.secretKey()))) {
+            Crypto.encrypt(OBJECT_MAPPER.writeValueAsBytes(serviceAccount), creds.secretKey()),
+            creds)) {
       byte[] jsonData = Crypto.decrypt(response.body().byteStream(), creds.secretKey());
       return OBJECT_MAPPER.readValue(jsonData, AddServiceAccountResponse.class).credentials();
     } catch (JsonProcessingException e) {
@@ -691,7 +710,7 @@ public class MinioAdminClient {
    *
    * @param accessKey Access key.
    * @param newSecretKey New secret key.
-   * @param newPolicy New policy as JSON string .
+   * @param newPolicy New policy as JSON string.
    * @param newStatus New service account status.
    * @param newName New service account name.
    * @param newDescription New description.
@@ -702,7 +721,7 @@ public class MinioAdminClient {
       @Nonnull String accessKey,
       @Nullable String newSecretKey,
       @Nullable Map<String, Object> newPolicy,
-      @Nullable boolean newStatus,
+      @Nullable Boolean newStatus,
       @Nullable String newName,
       @Nullable String newDescription,
       @Nullable ZonedDateTime newExpiration)
@@ -724,7 +743,7 @@ public class MinioAdminClient {
       serviceAccount.put("newSecretKey", newSecretKey);
     }
     if (newPolicy != null && !newPolicy.isEmpty()) serviceAccount.put("newPolicy", newPolicy);
-    serviceAccount.put("newStatus", newStatus ? "on" : "off");
+    if (newStatus != null) serviceAccount.put("newStatus", newStatus ? "on" : "off");
     if (newName != null && !newName.isEmpty()) serviceAccount.put("newName", newName);
     if (newDescription != null && !newDescription.isEmpty()) {
       serviceAccount.put("newDescription", newDescription);
@@ -739,7 +758,8 @@ public class MinioAdminClient {
             Http.Method.POST,
             Command.UPDATE_SERVICE_ACCOUNT,
             ImmutableMultimap.of("accessKey", accessKey),
-            Crypto.encrypt(OBJECT_MAPPER.writeValueAsBytes(serviceAccount), creds.secretKey()))) {
+            Crypto.encrypt(OBJECT_MAPPER.writeValueAsBytes(serviceAccount), creds.secretKey()),
+            creds)) {
     } catch (JsonProcessingException e) {
       throw new MinioException(e);
     }
@@ -777,13 +797,14 @@ public class MinioAdminClient {
       throw new IllegalArgumentException("user name must be provided");
     }
 
+    Credentials creds = getCredentials();
     try (Response response =
         execute(
             Http.Method.GET,
             Command.LIST_SERVICE_ACCOUNTS,
             ImmutableMultimap.of("user", username),
-            null)) {
-      Credentials creds = getCredentials();
+            null,
+            creds)) {
       byte[] jsonData = Crypto.decrypt(response.body().byteStream(), creds.secretKey());
       return OBJECT_MAPPER.readValue(jsonData, ListServiceAccountResponse.class);
     } catch (IOException e) {
@@ -804,13 +825,14 @@ public class MinioAdminClient {
     if (accessKey == null || accessKey.isEmpty()) {
       throw new IllegalArgumentException("access key must be provided");
     }
+    Credentials creds = getCredentials();
     try (Response response =
         execute(
             Http.Method.GET,
             Command.INFO_SERVICE_ACCOUNT,
             ImmutableMultimap.of("accessKey", accessKey),
-            null)) {
-      Credentials creds = getCredentials();
+            null,
+            creds)) {
       byte[] jsonData = Crypto.decrypt(response.body().byteStream(), creds.secretKey());
       return OBJECT_MAPPER.readValue(jsonData, GetServiceAccountInfoResponse.class);
     } catch (IOException e) {
@@ -824,7 +846,7 @@ public class MinioAdminClient {
       @Nullable String user,
       @Nullable String group)
       throws MinioException {
-    if (!(user != null ^ group != null)) {
+    if (!Utils.exactlyOneNonNull(user, group)) {
       throw new IllegalArgumentException("either user or group must be provided");
     }
 
@@ -842,7 +864,8 @@ public class MinioAdminClient {
             Http.Method.POST,
             command,
             null,
-            Crypto.encrypt(OBJECT_MAPPER.writeValueAsBytes(map), creds.secretKey()))) {
+            Crypto.encrypt(OBJECT_MAPPER.writeValueAsBytes(map), creds.secretKey()),
+            creds)) {
       return OBJECT_MAPPER.readValue(
           Crypto.decrypt(response.body().byteStream(), creds.secretKey()),
           PolicyAssociationResponse.class);

@@ -51,8 +51,8 @@ public class PartReader {
       Checksum.Algorithm... algorithms)
       throws MinioException {
     this.file = Objects.requireNonNull(file, "file must not be null");
-    if (objectSize < 0) throw new IllegalArgumentException("valid object size must be provided");
-    if (partCount < 0) throw new IllegalArgumentException("part count must be provided");
+    if (objectSize < 0) throw new IllegalArgumentException("object size must not be negative");
+    if (partCount < 0) throw new IllegalArgumentException("part count must not be negative");
     set(objectSize, partSize, partCount, algorithms);
   }
 
@@ -106,7 +106,7 @@ public class PartReader {
   }
 
   public void read(ByteBuffer buffer) throws MinioException {
-    if (buffer == null) throw new IllegalArgumentException("valid buffer must be provided");
+    if (buffer == null) throw new IllegalArgumentException("buffer must not be null");
     if (eof) throw new MinioException("EOF reached");
     if (partNumber == partCount) throw new MinioException("data fully read");
 

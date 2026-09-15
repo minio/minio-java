@@ -80,10 +80,18 @@ public class AwsConfigProvider extends EnvironmentProvider {
         throw new ProviderException(
             "Access key does not exist in profile " + profile + " in AWS credential file");
       }
+      if (accessKey.isEmpty()) {
+        throw new ProviderException(
+            "Empty access key in profile " + profile + " in AWS credential file");
+      }
 
       if (secretKey == null) {
         throw new ProviderException(
             "Secret key does not exist in profile " + profile + " in AWS credential file");
+      }
+      if (secretKey.isEmpty()) {
+        throw new ProviderException(
+            "Empty secret key in profile " + profile + " in AWS credential file");
       }
 
       return new Credentials(accessKey, secretKey, sessionToken, null);
@@ -110,6 +118,8 @@ public class AwsConfigProvider extends EnvironmentProvider {
             section = new Properties();
             return result.put(header.substring(1, header.length() - 1), section);
           }
+          // Ignore key-value entries that appear before any [section] header.
+          if (section == null) return null;
           return section.put(key, value);
         }
 

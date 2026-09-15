@@ -56,7 +56,7 @@ public class PromptObjectArgs extends ObjectVersionArgs {
       Utils.validateNotNull(args.promptArgs, "prompt argument");
     }
 
-    public Builder offset(String prompt) {
+    public Builder prompt(String prompt) {
       Utils.validateNotEmptyString(prompt, "prompt");
       operations.add(args -> args.prompt = prompt);
       return this;
