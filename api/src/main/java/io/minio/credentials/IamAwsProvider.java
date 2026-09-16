@@ -31,7 +31,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.ProviderException;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import javax.annotation.Nullable;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -43,9 +46,17 @@ import okhttp3.Response;
 /**
  * Credential provider using <a
  * href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html">IAM roles
- * for Amazon EC2</a>.
+ * for Amazon EC2</a>, <a
+ * href="https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html">IAM
+ * roles for service accounts</a>, ECS task roles and <a
+ * href="https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html">EKS Pod Identity</a>.
  */
 public class IamAwsProvider extends EnvironmentProvider {
+  // Hosts of ECS task metadata and EKS Pod Identity Agent credential endpoints. AWS allows these
+  // link-local addresses in AWS_CONTAINER_CREDENTIALS_FULL_URI in addition to loopback addresses.
+  private static final Set<InetAddress> ALLOWED_CONTAINER_ADDRESSES =
+      allowedContainerAddresses("169.254.170.2", "169.254.170.23", "fd00:ec2::23");
+
   // Custom endpoint to fetch IAM role credentials.
   private final HttpUrl customEndpoint;
   private final OkHttpClient httpClient;
@@ -70,15 +81,64 @@ public class IamAwsProvider extends EnvironmentProvider {
             .build();
   }
 
-  private void checkLoopbackHost(HttpUrl url) {
-    try {
-      for (InetAddress addr : InetAddress.getAllByName(url.host())) {
-        if (!addr.isLoopbackAddress()) {
-          throw new ProviderException(url.host() + " is not loopback only host");
-        }
+  private static Set<InetAddress> allowedContainerAddresses(String... hosts) {
+    Set<InetAddress> addresses = new HashSet<>();
+    for (String host : hosts) {
+      try {
+        // Literal IP addresses are parsed without doing a DNS lookup.
+        addresses.add(InetAddress.getByName(host));
+      } catch (UnknownHostException e) {
+        throw new ProviderException("Unable to parse address " + host, e);
       }
+    }
+    return Collections.unmodifiableSet(addresses);
+  }
+
+  /**
+   * Check the host of container credential endpoint is allowed as done by AWS; it must either
+   * resolve to loopback addresses only, resolve to the ECS or EKS Pod Identity link-local addresses
+   * only, or be accessed over HTTPS.
+   */
+  private void checkContainerHost(HttpUrl url) {
+    if (url.isHttps()) return;
+
+    InetAddress[] addrs;
+    try {
+      addrs = InetAddress.getAllByName(url.host());
     } catch (UnknownHostException e) {
-      throw new ProviderException("Host in " + url + " is not loopback address");
+      throw new ProviderException("Host in " + url + " is not loopback address", e);
+    }
+
+    boolean loopback = addrs.length > 0;
+    boolean allowed = addrs.length > 0;
+    for (InetAddress addr : addrs) {
+      loopback = loopback && addr.isLoopbackAddress();
+      allowed = allowed && ALLOWED_CONTAINER_ADDRESSES.contains(addr);
+    }
+
+    if (!loopback && !allowed) {
+      throw new ProviderException(
+          url.host()
+              + " is neither loopback only host nor ECS/EKS credential endpoint; use HTTPS scheme"
+              + " to fetch credentials from other hosts");
+    }
+  }
+
+  /**
+   * Get authorization token of container credential endpoint.
+   * AWS_CONTAINER_AUTHORIZATION_TOKEN_FILE takes precedence over AWS_CONTAINER_AUTHORIZATION_TOKEN
+   * as done by AWS; EKS Pod Identity sets the former only.
+   */
+  private String containerAuthorizationToken() {
+    String filename = getProperty("AWS_CONTAINER_AUTHORIZATION_TOKEN_FILE");
+    if (filename == null) return getProperty("AWS_CONTAINER_AUTHORIZATION_TOKEN");
+
+    try {
+      byte[] data = Files.readAllBytes(Paths.get(filename));
+      // The token is passed as HTTP header value; trailing newline in the file must go away.
+      return new String(data, StandardCharsets.UTF_8).trim();
+    } catch (IOException e) {
+      throw new ProviderException("Error in reading file " + filename, e);
     }
   }
 
@@ -211,19 +271,33 @@ public class IamAwsProvider extends EnvironmentProvider {
     }
 
     String tokenHeader = Http.Headers.AUTHORIZATION;
-    String token = getProperty("AWS_CONTAINER_AUTHORIZATION_TOKEN");
-    if (getProperty("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI") != null) {
+    String token;
+    String relativeUri = getProperty("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI");
+    String fullUri = getProperty("AWS_CONTAINER_CREDENTIALS_FULL_URI");
+    if (relativeUri != null) {
+      token = containerAuthorizationToken();
       if (url == null) {
+        // AWS sets the value with leading slash and it may have query parameters; parsing the
+        // whole URI avoids the empty path segment added by HttpUrl.Builder.addPathSegments().
         url =
-            new HttpUrl.Builder()
-                .scheme("http")
-                .host("169.254.170.2")
-                .addPathSegments(getProperty("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"))
-                .build();
+            HttpUrl.parse(
+                "http://169.254.170.2"
+                    + (relativeUri.startsWith("/") ? relativeUri : "/" + relativeUri));
+        if (url == null) {
+          throw new ProviderException(
+              "Invalid AWS_CONTAINER_CREDENTIALS_RELATIVE_URI value " + relativeUri);
+        }
       }
-    } else if (getProperty("AWS_CONTAINER_CREDENTIALS_FULL_URI") != null) {
-      if (url == null) url = HttpUrl.parse(getProperty("AWS_CONTAINER_CREDENTIALS_FULL_URI"));
-      checkLoopbackHost(url);
+    } else if (fullUri != null) {
+      token = containerAuthorizationToken();
+      if (url == null) {
+        url = HttpUrl.parse(fullUri);
+        if (url == null) {
+          throw new ProviderException(
+              "Invalid AWS_CONTAINER_CREDENTIALS_FULL_URI value " + fullUri);
+        }
+      }
+      checkContainerHost(url);
     } else {
       token = fetchImdsToken();
       tokenHeader = "X-aws-ec2-metadata-token";
