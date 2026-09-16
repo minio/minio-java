@@ -139,7 +139,7 @@ public class ObjectLockConfiguration {
     }
 
     public int duration() {
-      return days;
+      return days == null ? 0 : days;
     }
 
     @Override
@@ -165,7 +165,7 @@ public class ObjectLockConfiguration {
     }
 
     public int duration() {
-      return years;
+      return years == null ? 0 : years;
     }
 
     @Override

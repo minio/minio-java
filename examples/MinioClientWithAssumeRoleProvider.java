@@ -25,9 +25,9 @@ public class MinioClientWithAssumeRoleProvider {
   public static void main(String[] args) throws MinioException {
     Provider provider =
         new AssumeRoleProvider(
-            "https://play.minio.io:9000/", // STS endpoint usually point to MinIO server.
-            "minio", // Access key.
-            "minio123", // Secret key.
+            "https://STS-HOST:STS-PORT/", // STS endpoint usually point to MinIO server.
+            "YOUR-ACCESSKEY", // Access key.
+            "YOUR-SECRETACCESSKEY", // Secret key.
             null, // Duration seconds if available.
             null, // Policy if available.
             null, // Region if available.
@@ -38,7 +38,7 @@ public class MinioClientWithAssumeRoleProvider {
 
     MinioClient minioClient =
         MinioClient.builder()
-            .endpoint("https://play.minio.io:9000")
+            .endpoint("https://MINIO-HOST:MINIO-PORT")
             .credentialsProvider(provider)
             .build();
 

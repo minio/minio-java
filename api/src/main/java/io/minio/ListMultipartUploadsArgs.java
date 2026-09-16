@@ -69,7 +69,7 @@ public class ListMultipartUploadsArgs extends BucketArgs {
 
     public Builder maxUploads(Integer maxUploads) {
       if (maxUploads != null && maxUploads < 1) {
-        throw new IllegalArgumentException("valid max keys must be provided");
+        throw new IllegalArgumentException("max uploads must be greater than 0");
       }
 
       operations.add(args -> args.maxUploads = maxUploads);

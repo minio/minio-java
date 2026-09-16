@@ -85,7 +85,7 @@ public class PutObjectArgs extends PutObjectBaseArgs {
 
     public Builder data(byte[] data, int length) {
       if (data != null && length < 0) {
-        throw new IllegalArgumentException("valid length must be provided");
+        throw new IllegalArgumentException("length must not be negative");
       }
       return setStream(
           null,
@@ -107,6 +107,6 @@ public class PutObjectArgs extends PutObjectBaseArgs {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), stream, data);
+    return Objects.hash(super.hashCode(), stream, Arrays.hashCode(data));
   }
 }

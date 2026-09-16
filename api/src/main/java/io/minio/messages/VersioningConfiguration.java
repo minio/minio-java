@@ -90,8 +90,8 @@ public class VersioningConfiguration {
     return excludedPrefixes;
   }
 
-  public Boolean excludeFolders() {
-    return excludeFolders;
+  public boolean excludeFolders() {
+    return excludeFolders != null && excludeFolders;
   }
 
   @Override

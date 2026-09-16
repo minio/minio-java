@@ -49,7 +49,7 @@ public class GetPresignedObjectUrlArgs extends ObjectVersionArgs {
       Utils.validateNotNull(method, "method");
     }
 
-    private void validateExpiry(int expiry) {
+    private void validateExpiry(long expiry) {
       if (expiry < 1 || expiry > DEFAULT_EXPIRY_TIME) {
         throw new IllegalArgumentException(
             "expiry must be minimum 1 second to maximum "
@@ -73,7 +73,11 @@ public class GetPresignedObjectUrlArgs extends ObjectVersionArgs {
     }
 
     public Builder expiry(int duration, TimeUnit unit) {
-      return expiry((int) unit.toSeconds(duration));
+      // Validate the full-precision seconds before narrowing to int, otherwise a large duration
+      // could overflow into the valid range and pass the check with a truncated value.
+      long seconds = unit.toSeconds(duration);
+      validateExpiry(seconds);
+      return expiry((int) seconds);
     }
 
     @Override

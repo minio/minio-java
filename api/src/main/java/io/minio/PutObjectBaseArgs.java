@@ -28,7 +28,7 @@ public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
   protected MediaType contentType;
   protected Checksum.Algorithm checksum;
   protected int parallelUploads;
-  protected long delayMs = 100L;
+  protected long delayMs = 200L;
   protected int maxRetries = 5;
 
   public Long objectSize() {
@@ -149,7 +149,7 @@ public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
       return (B) this;
     }
 
-    /** Set delay between retries. Value &lt;= 0 disables retry (default 100ms). */
+    /** Set delay between retries. Value &lt;= 0 disables retry (default 200ms). */
     public B delayMs(long delayMs) {
       operations.add(args -> args.delayMs = delayMs);
       return (B) this;

@@ -38,19 +38,18 @@ public class GetObject {
     //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
     //         .build();
 
-    // Get input stream to have content of 'my-object' from 'my-bucket'
-    InputStream stream =
+    // Get input stream to have content of 'my-object' from 'my-bucket'.
+    // try-with-resources closes the stream (releasing the network connection) even on read error.
+    try (InputStream stream =
         minioClient.getObject(
-            GetObjectArgs.builder().bucket("my-bucket").object("my-object").build());
+            GetObjectArgs.builder().bucket("my-bucket").object("my-object").build())) {
 
-    // Read the input stream and print to the console till EOF.
-    byte[] buf = new byte[16384];
-    int bytesRead;
-    while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-      System.out.println(new String(buf, 0, bytesRead, StandardCharsets.UTF_8));
+      // Read the input stream and print to the console till EOF.
+      byte[] buf = new byte[16384];
+      int bytesRead;
+      while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+        System.out.println(new String(buf, 0, bytesRead, StandardCharsets.UTF_8));
+      }
     }
-
-    // Close the input stream.
-    stream.close();
   }
 }

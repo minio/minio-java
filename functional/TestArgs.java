@@ -128,7 +128,7 @@ public class TestArgs {
     String kmsKeyName = "my-minio-key";
     if (endpoint == null) {
       this.endpoint = "http://localhost:9000";
-      this.endpointTLS = "https://localhost:9001";
+      this.endpointTLS = "https://localhost:10000";
       this.accessKey = "minio";
       this.secretKey = "minio123";
       this.region = "us-east-1";
@@ -345,7 +345,7 @@ public class TestArgs {
   }
 
   public static boolean downloadMinioServer() throws IOException {
-    String url = "https://dl.min.io/server/minio/release/";
+    String url = "https://dl.min.io/aistor/minio/release/";
     if (OS.contains("linux")) {
       url += "linux-amd64/minio";
     } else if (OS.contains("windows")) {
@@ -388,13 +388,17 @@ public class TestArgs {
           new ProcessBuilder(
               binaryPath.getPath(),
               "server",
+              "--license",
+              "minio.license",
               "--address",
-              ":9001",
+              ":10000",
               "--certs-dir",
               ".cfg/certs",
               ".d{1...4}");
     } else {
-      pb = new ProcessBuilder(binaryPath.getPath(), "server", ".d{1...4}");
+      pb =
+          new ProcessBuilder(
+              binaryPath.getPath(), "server", "--license", "minio.license", ".d{1...4}");
     }
 
     Map<String, String> env = pb.environment();

@@ -52,30 +52,29 @@ public class GetObjectProgressBar {
     // Get object stat information.
     StatObjectResponse stat =
         minioClient.statObject(
-            StatObjectArgs.builder().bucket("testbucket").object("resumes/4.original.pdf").build());
+            StatObjectArgs.builder().bucket("my-bucket").object("my-object").build());
 
     // Get input stream to have content of 'my-object' from 'my-bucket'
-    InputStream is =
-        new ProgressStream(
-            "Downloading .. ",
-            stat.size(),
-            minioClient.getObject(
-                GetObjectArgs.builder().bucket("my-bucket").object("my-object").build()));
-
     Path path = Paths.get("my-filename");
-    OutputStream os = Files.newOutputStream(path, StandardOpenOption.CREATE);
+    try (InputStream is =
+            new ProgressStream(
+                "Downloading .. ",
+                stat.size(),
+                minioClient.getObject(
+                    GetObjectArgs.builder().bucket("my-bucket").object("my-object").build()));
+        OutputStream os =
+            Files.newOutputStream(
+                path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+      long bytesWritten = ByteStreams.copy(is, os);
 
-    long bytesWritten = ByteStreams.copy(is, os);
-    is.close();
-    os.close();
-
-    if (bytesWritten != stat.size()) {
-      throw new IOException(
-          path
-              + ": unexpected data written.  expected = "
-              + stat.size()
-              + ", written = "
-              + bytesWritten);
+      if (bytesWritten != stat.size()) {
+        throw new IOException(
+            path
+                + ": unexpected data written.  expected = "
+                + stat.size()
+                + ", written = "
+                + bytesWritten);
+      }
     }
   }
 }

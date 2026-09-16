@@ -51,7 +51,7 @@ public class ListObjectVersionsArgs extends BucketArgs {
   }
 
   public int maxKeys() {
-    return maxKeys;
+    return maxKeys != null ? maxKeys : 1000;
   }
 
   public String prefix() {
@@ -84,7 +84,7 @@ public class ListObjectVersionsArgs extends BucketArgs {
 
     public Builder maxKeys(Integer maxKeys) {
       if (maxKeys != null && maxKeys < 1) {
-        throw new IllegalArgumentException("valid max keys must be provided");
+        throw new IllegalArgumentException("max keys must be greater than 0");
       }
 
       operations.add(args -> args.maxKeys = maxKeys);

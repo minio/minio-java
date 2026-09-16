@@ -33,6 +33,7 @@ import java.util.Map;
 public class Checksum {
   /** MD5 hash of zero length byte array. */
   public static final String ZERO_MD5_HASH = "1B2M2Y8AsgTpgAmY7PhCfg==";
+
   /** SHA-256 hash of zero length byte array. */
   public static final String ZERO_SHA256_HASH =
       "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
@@ -342,12 +343,13 @@ public class Checksum {
 
     @Override
     public void update(byte[] p, int off, int len) {
+      int limit = off + len;
       java.nio.ByteBuffer byteBuffer = java.nio.ByteBuffer.wrap(p, off, len);
       byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
       int offset = byteBuffer.position();
 
       crc = ~crc;
-      while (p.length >= 64 && (p.length - offset) > 8) {
+      while (len >= 64 && (limit - offset) > 8) {
         long value = byteBuffer.getLong();
         crc ^= value;
         crc =
@@ -362,7 +364,7 @@ public class Checksum {
         offset = byteBuffer.position();
       }
 
-      for (; offset < len; offset++) {
+      for (; offset < limit; offset++) {
         crc = CRC64_TABLE[(int) ((crc ^ (long) p[offset]) & 0xFF)] ^ (crc >>> 8);
       }
 

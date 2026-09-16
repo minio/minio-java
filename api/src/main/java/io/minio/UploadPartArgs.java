@@ -59,7 +59,7 @@ public class UploadPartArgs extends PutObjectAPIBaseArgs {
       super.validate(args);
       Utils.validateNotEmptyString(args.uploadId, "upload ID");
       if (args.partNumber <= 0) {
-        throw new IllegalArgumentException("valid part number must be provided");
+        throw new IllegalArgumentException("part number must be greater than 0");
       }
     }
 
@@ -70,7 +70,7 @@ public class UploadPartArgs extends PutObjectAPIBaseArgs {
     }
 
     public Builder partNumber(int partNumber) {
-      if (partNumber <= 0) throw new IllegalArgumentException("valid part number must be provided");
+      if (partNumber <= 0) throw new IllegalArgumentException("part number must be greater than 0");
       operations.add(args -> args.partNumber = partNumber);
       return this;
     }

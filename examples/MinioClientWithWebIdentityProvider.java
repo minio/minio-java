@@ -56,6 +56,9 @@ public class MinioClientWithWebIdentityProvider {
 
     OkHttpClient client = new OkHttpClient();
     try (Response response = client.newCall(request).execute()) {
+      if (!response.isSuccessful()) {
+        throw new ProviderException("STS endpoint failed with HTTP status " + response.code());
+      }
       ObjectMapper mapper = new ObjectMapper();
       mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
       mapper.setVisibility(

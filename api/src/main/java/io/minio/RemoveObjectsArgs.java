@@ -24,7 +24,7 @@ import java.util.Objects;
 public class RemoveObjectsArgs extends BucketArgs {
   private boolean bypassGovernanceMode;
   private Iterable<DeleteRequest.Object> objects = new ArrayList<>();
-  private long delayMs = 100L;
+  private long delayMs = 200L;
   private int maxRetries = 5;
 
   public boolean bypassGovernanceMode() {
@@ -60,7 +60,7 @@ public class RemoveObjectsArgs extends BucketArgs {
       return this;
     }
 
-    /** Set delay between retries. Value &lt;= 0 makes no delay (default 100ms). */
+    /** Set delay between retries. Value &lt;= 0 makes no delay (default 200ms). */
     public Builder delayMs(long delayMs) {
       operations.add(args -> args.delayMs = delayMs);
       return this;

@@ -45,7 +45,7 @@ public enum Status {
       return DISABLED;
     }
 
-    if (statusString.isEmpty()) {
+    if (statusString == null || statusString.isEmpty()) {
       return null;
     }
 

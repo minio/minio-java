@@ -16,6 +16,7 @@
 
 package io.minio.credentials;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -95,10 +96,18 @@ public class MinioClientConfigProvider extends EnvironmentProvider {
         throw new ProviderException(
             "Access key does not exist in alias " + alias + " in MinioClient configuration file");
       }
+      if (accessKey.isEmpty()) {
+        throw new ProviderException(
+            "Empty access key in alias " + alias + " in MinioClient configuration file");
+      }
 
       if (secretKey == null) {
         throw new ProviderException(
             "Secret key does not exist in alias " + alias + " in MinioClient configuration file");
+      }
+      if (secretKey.isEmpty()) {
+        throw new ProviderException(
+            "Empty secret key in alias " + alias + " in MinioClient configuration file");
       }
 
       return new Credentials(accessKey, secretKey, null, null);
@@ -107,13 +116,23 @@ public class MinioClientConfigProvider extends EnvironmentProvider {
     }
   }
 
-  /** Configuration of {@link MinioClientConfigProvider}. */
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "UWF_UNWRITTEN_FIELD")
+  /**
+   * Configuration of {@link MinioClientConfigProvider}. Recent versions of {@code mc} store entries
+   * under "aliases"; older versions used "hosts". Both are accepted, "aliases" taking precedence.
+   * The {@link JsonProperty} annotations are required to make these private fields visible to
+   * Jackson.
+   */
   public static class Config {
+    @JsonProperty("aliases")
+    private Map<String, Map<String, String>> aliases;
+
+    @JsonProperty("hosts")
     private Map<String, Map<String, String>> hosts;
 
     public Map<String, String> get(String alias) {
-      return hosts.get(alias);
+      Map<String, String> values = aliases == null ? null : aliases.get(alias);
+      if (values == null) values = hosts == null ? null : hosts.get(alias);
+      return values;
     }
   }
 }

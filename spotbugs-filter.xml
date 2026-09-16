@@ -32,4 +32,8 @@
   <Match>
     <Bug pattern="DMI_DOH"/>
   </Match>
+  <!-- Intentional: subclass *Args override validate* methods as public for the public API surface. -->
+  <Match>
+    <Bug pattern="IAOM_DO_NOT_INCREASE_METHOD_ACCESSIBILITY"/>
+  </Match>
 </FindBugsFilter>
