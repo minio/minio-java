@@ -440,7 +440,7 @@ public class MinioAdminClient {
       throws MinioException {
     Map<String, Object> quotaEntity = new HashMap<>();
     if (size > 0) quotaEntity.put("quotatype", "hard");
-    quotaEntity.put("quota", unit.toBytes(size));
+    quotaEntity.put("size", unit.toBytes(size));
     try (Response response =
         execute(
             Http.Method.PUT,
@@ -471,15 +471,7 @@ public class MinioAdminClient {
               .getTypeFactory()
               .constructMapType(HashMap.class, String.class, JsonNode.class);
       Map<String, JsonNode> quotaEntity = OBJECT_MAPPER.readValue(response.body().bytes(), mapType);
-      // Servers built with madmin-go v4 send the limit only as "size". Servers built with an
-      // earlier madmin-go send "quota", plus "size" once madmin-go added it, left at 0 when the
-      // quota was set through "quota". Take the first non-zero of the two.
       JsonNode quota = quotaEntity.get("size");
-      JsonNode legacyQuota = quotaEntity.get("quota");
-      if (quota == null
-          || (legacyQuota != null && quota.isIntegralNumber() && quota.longValue() == 0)) {
-        quota = legacyQuota;
-      }
       if (quota == null) throw new MinioException("quota not found in response");
       // JsonNode.asLong() coerces anything non-numeric to zero, making a malformed response
       // indistinguishable from a cleared quota; reject such values instead.
