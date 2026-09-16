@@ -1,5 +1,6 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2026 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage,
+ * (C) 2026 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,5 +89,11 @@ public class MinioAdminClientTest {
   public void testGetBucketQuotaNonIntegral()
       throws IOException, InterruptedException, MinioException {
     getBucketQuota("{\"size\":\"1048576\",\"quotatype\":\"hard\"}");
+  }
+
+  @Test(expected = MinioException.class)
+  public void testGetBucketQuotaNonIntegralSizeWithLegacyQuota()
+      throws IOException, InterruptedException, MinioException {
+    getBucketQuota("{\"size\":\"1048576\",\"quota\":2048,\"quotatype\":\"hard\"}");
   }
 }

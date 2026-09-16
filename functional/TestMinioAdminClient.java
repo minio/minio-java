@@ -15,7 +15,11 @@
  * limitations under the License.
  */
 
+import io.minio.MakeBucketArgs;
+import io.minio.MinioClient;
+import io.minio.RemoveBucketArgs;
 import io.minio.admin.MinioAdminClient;
+import io.minio.admin.QuotaUnit;
 import io.minio.admin.Status;
 import io.minio.admin.UserInfo;
 import java.util.Map;
@@ -141,6 +145,29 @@ public class TestMinioAdminClient extends TestArgs {
     }
   }
 
+  public void setGetClearBucketQuota() throws Exception {
+    String methodName = "setBucketQuota()/getBucketQuota()/clearBucketQuota()";
+    if (!MINT_ENV) System.out.println(methodName);
+    long startTime = System.currentTimeMillis();
+
+    String bucketName = getRandomName();
+    MinioClient s3Client =
+        MinioClient.builder().endpoint(endpoint).credentials(accessKey, secretKey).build();
+    try {
+      s3Client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        client.setBucketQuota(bucketName, 1, QuotaUnit.MB);
+        Assertions.assertEquals(QuotaUnit.MB.toBytes(1), client.getBucketQuota(bucketName));
+        client.clearBucketQuota(bucketName);
+        Assertions.assertEquals(0L, client.getBucketQuota(bucketName));
+      } finally {
+        s3Client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
   public void runAdminTests() throws Exception {
     addUser();
     addCannedPolicy();
@@ -150,5 +177,6 @@ public class TestMinioAdminClient extends TestArgs {
     listCannedPolicies();
     deleteUser();
     removeCannedPolicy();
+    setGetClearBucketQuota();
   }
 }

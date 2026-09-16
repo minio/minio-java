@@ -471,9 +471,9 @@ public class MinioAdminClient {
               .getTypeFactory()
               .constructMapType(HashMap.class, String.class, JsonNode.class);
       Map<String, JsonNode> quotaEntity = OBJECT_MAPPER.readValue(response.body().bytes(), mapType);
-      // Servers built with madmin-go v4 send the limit only as "size"; madmin-go v3 servers send
-      // both "size" and the deprecated "quota". Take the first non-zero of the two, the same rule
-      // the server applies when it parses a quota.
+      // Servers built with madmin-go v4 send the limit only as "size". Servers built with an
+      // earlier madmin-go send "quota", plus "size" once madmin-go added it, left at 0 when the
+      // quota was set through "quota". Take the first non-zero of the two.
       JsonNode quota = quotaEntity.get("size");
       JsonNode legacyQuota = quotaEntity.get("quota");
       if (quota == null
