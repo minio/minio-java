@@ -89,7 +89,7 @@ subprojects {
         }
     }
 
-    test {
+    tasks.withType(Test).configureEach {
         // Show stacktrace on test failure than opening in web browser.
         testLogging {
             exceptionFormat = 'full'
