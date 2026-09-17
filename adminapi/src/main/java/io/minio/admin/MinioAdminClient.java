@@ -440,7 +440,7 @@ public class MinioAdminClient {
       throws MinioException {
     Map<String, Object> quotaEntity = new HashMap<>();
     if (size > 0) quotaEntity.put("quotatype", "hard");
-    quotaEntity.put("quota", unit.toBytes(size));
+    quotaEntity.put("size", unit.toBytes(size));
     try (Response response =
         execute(
             Http.Method.PUT,
@@ -471,7 +471,7 @@ public class MinioAdminClient {
               .getTypeFactory()
               .constructMapType(HashMap.class, String.class, JsonNode.class);
       Map<String, JsonNode> quotaEntity = OBJECT_MAPPER.readValue(response.body().bytes(), mapType);
-      JsonNode quota = quotaEntity.get("quota");
+      JsonNode quota = quotaEntity.get("size");
       if (quota == null) throw new MinioException("quota not found in response");
       // JsonNode.asLong() coerces anything non-numeric to zero, making a malformed response
       // indistinguishable from a cleared quota; reject such values instead.
