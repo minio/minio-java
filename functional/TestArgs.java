@@ -267,13 +267,10 @@ public class TestArgs {
 
   /** Write data to given object url. */
   public static void writeObject(String urlString, byte[] dataBytes) throws Exception {
-    // Set header 'x-amz-acl' to 'bucket-owner-full-control', so objects created
-    // anonymously, can be downloaded by bucket owner in AWS S3.
     Request request =
         new Request.Builder()
             .url(HttpUrl.parse(urlString))
             .method("PUT", RequestBody.create(dataBytes, null))
-            .addHeader("x-amz-acl", "bucket-owner-full-control")
             .build();
     try (Response response = newHttpClient().newCall(request).execute()) {
       if (!response.isSuccessful()) {
