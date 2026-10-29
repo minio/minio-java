@@ -55,7 +55,7 @@ subprojects {
         api 'org.bouncycastle:bcprov-jdk18on:1.85.2'
         api 'org.apache.commons:commons-compress:1.28.0'
         api 'commons-codec:commons-codec:1.22.1'
-        api 'org.xerial.snappy:snappy-java:1.1.10.8'
+        api 'org.xerial.snappy:snappy-java:1.1.10.9'
         compileOnly 'com.github.spotbugs:spotbugs-annotations:4.10.4'
 
         testImplementation 'com.squareup.okhttp3:mockwebserver:5.5.0'
