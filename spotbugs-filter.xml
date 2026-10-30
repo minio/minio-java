@@ -36,4 +36,15 @@
   <Match>
     <Bug pattern="IAOM_DO_NOT_INCREASE_METHOD_ACCESSIBILITY"/>
   </Match>
+  <!-- Existing public API: constructors delegate to non-final putAll/set/newUrlBuilder; making them final would break subclasses. -->
+  <Match>
+    <Bug pattern="MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR"/>
+    <Or>
+      <Class name="io.minio.Http$Headers"/>
+      <Class name="io.minio.Http$QueryParameters"/>
+      <Class name="io.minio.credentials.AssumeRoleProvider"/>
+      <Class name="io.minio.credentials.CertificateIdentityProvider"/>
+      <Class name="io.minio.credentials.LdapIdentityProvider"/>
+    </Or>
+  </Match>
 </FindBugsFilter>

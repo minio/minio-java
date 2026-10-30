@@ -70,19 +70,19 @@ jobs:
         run: |
           cd functional
           curl -sSfLO https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.14.4/junit-platform-console-standalone-1.14.4.jar
-          curl -sSfLO https://repo1.maven.org/maven2/com/github/spotbugs/spotbugs-annotations/4.10.4/spotbugs-annotations-4.10.4.jar
-          javac -cp spotbugs-annotations-4.10.4.jar:junit-platform-console-standalone-1.14.4.jar:../api/build/libs/minio-${DEV_VERSION}-all.jar:../adminapi/build/libs/minio-admin-${DEV_VERSION}-all.jar:. FunctionalTest.java
-          java -cp spotbugs-annotations-4.10.4.jar:junit-platform-console-standalone-1.14.4.jar:../api/build/libs/minio-${DEV_VERSION}-all.jar:../adminapi/build/libs/minio-admin-${DEV_VERSION}-all.jar:. FunctionalTest
-          javac -cp spotbugs-annotations-4.10.4.jar:junit-platform-console-standalone-1.14.4.jar:../api/build/libs/minio-${DEV_VERSION}-all.jar:. ./TestUserAgent.java
-          java -Dversion=${DEV_VERSION} -cp spotbugs-annotations-4.10.4.jar:junit-platform-console-standalone-1.14.4.jar:../api/build/libs/minio-${DEV_VERSION}-all.jar:. TestUserAgent
-          javac -cp spotbugs-annotations-4.10.4.jar:junit-platform-console-standalone-1.14.4.jar:../api/build/libs/minio-${RELEASE_VERSION}-all.jar:. ./TestUserAgent.java
-          java -Dversion=${RELEASE_VERSION} -cp spotbugs-annotations-4.10.4.jar:junit-platform-console-standalone-1.14.4.jar:../api/build/libs/minio-${RELEASE_VERSION}-all.jar:. TestUserAgent
+          curl -sSfLO https://repo1.maven.org/maven2/com/github/spotbugs/spotbugs-annotations/4.10.5/spotbugs-annotations-4.10.5.jar
+          javac -cp spotbugs-annotations-4.10.5.jar:junit-platform-console-standalone-1.14.4.jar:../api/build/libs/minio-${DEV_VERSION}-all.jar:../adminapi/build/libs/minio-admin-${DEV_VERSION}-all.jar:. FunctionalTest.java
+          java -cp spotbugs-annotations-4.10.5.jar:junit-platform-console-standalone-1.14.4.jar:../api/build/libs/minio-${DEV_VERSION}-all.jar:../adminapi/build/libs/minio-admin-${DEV_VERSION}-all.jar:. FunctionalTest
+          javac -cp spotbugs-annotations-4.10.5.jar:junit-platform-console-standalone-1.14.4.jar:../api/build/libs/minio-${DEV_VERSION}-all.jar:. ./TestUserAgent.java
+          java -Dversion=${DEV_VERSION} -cp spotbugs-annotations-4.10.5.jar:junit-platform-console-standalone-1.14.4.jar:../api/build/libs/minio-${DEV_VERSION}-all.jar:. TestUserAgent
+          javac -cp spotbugs-annotations-4.10.5.jar:junit-platform-console-standalone-1.14.4.jar:../api/build/libs/minio-${RELEASE_VERSION}-all.jar:. ./TestUserAgent.java
+          java -Dversion=${RELEASE_VERSION} -cp spotbugs-annotations-4.10.5.jar:junit-platform-console-standalone-1.14.4.jar:../api/build/libs/minio-${RELEASE_VERSION}-all.jar:. TestUserAgent
 
       - name: Run tests on Windows
         if: matrix.os == 'windows-latest'
         run: |
           cd functional
           curl -sSfLO https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.14.4/junit-platform-console-standalone-1.14.4.jar
-          curl -sSfLO https://repo1.maven.org/maven2/com/github/spotbugs/spotbugs-annotations/4.10.4/spotbugs-annotations-4.10.4.jar
-          javac -encoding UTF-8 -cp "spotbugs-annotations-4.10.4.jar;junit-platform-console-standalone-1.14.4.jar;../api/build/libs/minio-$Env:DEV_VERSION-all.jar;../adminapi/build/libs/minio-admin-$Env:DEV_VERSION-all.jar;." FunctionalTest.java
-          java -cp "spotbugs-annotations-4.10.4.jar;junit-platform-console-standalone-1.14.4.jar;../api/build/libs/minio-$Env:DEV_VERSION-all.jar;../adminapi/build/libs/minio-admin-$Env:DEV_VERSION-all.jar;." FunctionalTest
+          curl -sSfLO https://repo1.maven.org/maven2/com/github/spotbugs/spotbugs-annotations/4.10.5/spotbugs-annotations-4.10.5.jar
+          javac -encoding UTF-8 -cp "spotbugs-annotations-4.10.5.jar;junit-platform-console-standalone-1.14.4.jar;../api/build/libs/minio-$Env:DEV_VERSION-all.jar;../adminapi/build/libs/minio-admin-$Env:DEV_VERSION-all.jar;." FunctionalTest.java
+          java -cp "spotbugs-annotations-4.10.5.jar;junit-platform-console-standalone-1.14.4.jar;../api/build/libs/minio-$Env:DEV_VERSION-all.jar;../adminapi/build/libs/minio-admin-$Env:DEV_VERSION-all.jar;." FunctionalTest
