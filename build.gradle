@@ -18,6 +18,16 @@
 /*   gradleVersion = '9.8.2'    */
 /********************************/
 
+buildscript {
+    configurations.classpath {
+        // JReleaser 1.26.0 is built against JGit 5.13 and fails with NoClassDefFoundError
+        // org/eclipse/jgit/lib/GpgObjectSigner (removed in JGit 7) when Spotless 8.x pulls JGit 7
+        // onto the shared plugin classpath. Spotless works with 5.13 for this build. Remove once
+        // JReleaser supports JGit 7.
+        resolutionStrategy.force 'org.eclipse.jgit:org.eclipse.jgit:5.13.5.202508271544-r'
+    }
+}
+
 plugins {
     id 'com.gradleup.shadow' version '9.6.1'
     id 'com.github.spotbugs' version '6.5.13'
