@@ -23,14 +23,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.minio.Http;
 import io.minio.Time;
+import io.minio.errors.MinioException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.security.ProviderException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
@@ -60,6 +67,7 @@ public class IamAwsProvider extends EnvironmentProvider {
   // Custom endpoint to fetch IAM role credentials.
   private final HttpUrl customEndpoint;
   private final OkHttpClient httpClient;
+  private final boolean customHttpClient;
   private final ObjectMapper mapper;
   private Credentials credentials;
 
@@ -68,6 +76,7 @@ public class IamAwsProvider extends EnvironmentProvider {
         (customEndpoint != null)
             ? Objects.requireNonNull(HttpUrl.parse(customEndpoint), "Invalid custom endpoint")
             : null;
+    this.customHttpClient = customHttpClient != null;
     // HTTP/1.1 is only supported in default client because of HTTP/2 in OkHttpClient cause 5
     // minutes timeout on program exit.
     this.httpClient =
@@ -142,15 +151,75 @@ public class IamAwsProvider extends EnvironmentProvider {
     }
   }
 
+  /**
+   * Get STS endpoint from AWS_ENDPOINT_URL_STS, which is the opt-in to this behavior. The global
+   * AWS_ENDPOINT_URL is not read. AWS_IGNORE_CONFIGURED_ENDPOINT_URLS=true skips the variable. See
+   * <a href="https://docs.aws.amazon.com/sdkref/latest/guide/feature-ss-endpoints.html">AWS
+   * documentation</a>.
+   */
+  private HttpUrl stsEndpointFromEnv() {
+    if ("true".equalsIgnoreCase(getProperty("AWS_IGNORE_CONFIGURED_ENDPOINT_URLS"))) return null;
+
+    String value = getProperty("AWS_ENDPOINT_URL_STS");
+    if (value == null || value.isEmpty()) return null;
+
+    HttpUrl url = HttpUrl.parse(value);
+    // The value is left out of the message as it may contain credentials.
+    if (url == null) throw new ProviderException("Invalid AWS_ENDPOINT_URL_STS value");
+    return url;
+  }
+
+  /**
+   * Get HTTP client trusting certificates of AWS_CA_BUNDLE in addition to the default trust store.
+   * It is used only when the STS endpoint comes from AWS_ENDPOINT_URL_STS. A caller supplied client
+   * is returned as is. See <a
+   * href="https://docs.aws.amazon.com/sdkref/latest/guide/feature-gen-config.html">AWS
+   * documentation</a>.
+   */
+  OkHttpClient stsHttpClient() {
+    String caBundle = getProperty("AWS_CA_BUNDLE");
+    if (customHttpClient || caBundle == null || caBundle.isEmpty()) return httpClient;
+
+    // Parse the bundle once and hand the certificates over, so a bundle replaced meanwhile cannot
+    // be read twice. The default trust store would hide an empty bundle.
+    Collection<? extends Certificate> certificates;
+    try (InputStream in = Files.newInputStream(Paths.get(caBundle))) {
+      certificates = CertificateFactory.getInstance("X.509").generateCertificates(in);
+    } catch (InvalidPathException | IOException | CertificateException e) {
+      throw new ProviderException("Unable to read AWS_CA_BUNDLE " + caBundle, e);
+    }
+    if (certificates.isEmpty()) {
+      throw new ProviderException("AWS_CA_BUNDLE " + caBundle + " contains no certificates");
+    }
+
+    try {
+      // Keep SSL_CERT_FILE and SSL_CERT_DIR in effect as the default trust store is extended.
+      return Http.enableExternalCertificates(
+          httpClient,
+          Arrays.asList(getProperty("SSL_CERT_FILE")),
+          getProperty("SSL_CERT_DIR"),
+          certificates);
+    } catch (MinioException e) {
+      throw new ProviderException("Unable to load certificates for STS request", e);
+    }
+  }
+
   private Credentials fetchCredentials(String tokenFile) {
     HttpUrl url = this.customEndpoint;
+    // AWS_CA_BUNDLE is read only for an endpoint from AWS_ENDPOINT_URL_STS.
+    boolean fromEnv = false;
+    if (url == null) {
+      url = stsEndpointFromEnv();
+      fromEnv = url != null;
+    }
     if (url == null) {
       String region = getProperty("AWS_REGION");
-      url =
-          HttpUrl.parse(
-              (region == null)
-                  ? "https://sts.amazonaws.com"
-                  : "https://sts." + region + ".amazonaws.com");
+      if (region == null || region.isEmpty()) {
+        url = HttpUrl.parse("https://sts.amazonaws.com");
+      } else {
+        String suffix = region.startsWith("cn-") ? ".amazonaws.com.cn" : ".amazonaws.com";
+        url = HttpUrl.parse("https://sts." + region + suffix);
+      }
     }
 
     Provider provider =
@@ -168,7 +237,7 @@ public class IamAwsProvider extends EnvironmentProvider {
             null,
             getProperty("AWS_ROLE_ARN"),
             getProperty("AWS_ROLE_SESSION_NAME"),
-            httpClient);
+            fromEnv ? stsHttpClient() : httpClient);
     credentials = provider.fetch();
     return credentials;
   }
