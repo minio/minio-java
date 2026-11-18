@@ -45,6 +45,7 @@ import java.time.ZonedDateTime;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -513,7 +514,8 @@ public class Http {
     return null;
   }
 
-  private static X509TrustManager getCompositeTrustManager(String filePath, String dirPath)
+  private static X509TrustManager getCompositeTrustManager(
+      List<String> filePaths, String dirPath, Collection<? extends Certificate> certificates)
       throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException {
     List<X509TrustManager> trustManagers = new ArrayList<>();
 
@@ -525,9 +527,20 @@ public class Http {
       if (dirTm != null) trustManagers.add(dirTm);
     }
 
-    if (filePath != null && !filePath.isEmpty()) {
+    for (String filePath : filePaths) {
+      if (filePath == null || filePath.isEmpty()) continue;
       X509TrustManager fileTm = getTrustManagerFromFile(filePath);
       if (fileTm != null) trustManagers.add(fileTm);
+    }
+
+    if (!certificates.isEmpty()) {
+      KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+      ks.load(null);
+      int index = 0;
+      for (Certificate certificate : certificates) {
+        ks.setCertificateEntry("cert-given-" + (index++), certificate);
+      }
+      trustManagers.add(buildTrustManagerFromKeyStore(ks));
     }
 
     if (trustManagers.isEmpty()) return null;
@@ -616,8 +629,32 @@ public class Http {
   /** Enable external TLS certificates from given file path and all valid files from dir path. */
   public static OkHttpClient enableExternalCertificates(
       OkHttpClient client, String filePath, String dirPath) throws MinioException {
+    return enableExternalCertificatesFromFiles(client, Arrays.asList(filePath), dirPath);
+  }
+
+  /**
+   * Enable external TLS certificates from given file paths and all valid files from dir path. The
+   * client returned is the given one only when no trust manager is found at all, including none
+   * from the JVM trust store.
+   */
+  public static OkHttpClient enableExternalCertificatesFromFiles(
+      OkHttpClient client, List<String> filePaths, String dirPath) throws MinioException {
+    return enableExternalCertificates(client, filePaths, dirPath, Collections.emptyList());
+  }
+
+  /**
+   * Enable external TLS certificates from given file paths, all valid files from dir path and given
+   * certificates in addition to the JVM trust store. The client returned is the given one only when
+   * no trust manager is found at all, including none from the JVM trust store.
+   */
+  public static OkHttpClient enableExternalCertificates(
+      OkHttpClient client,
+      List<String> filePaths,
+      String dirPath,
+      Collection<? extends Certificate> certificates)
+      throws MinioException {
     try {
-      X509TrustManager tm = getCompositeTrustManager(filePath, dirPath);
+      X509TrustManager tm = getCompositeTrustManager(filePaths, dirPath, certificates);
       if (tm == null) return client;
 
       SSLContext sslContext = SSLContext.getInstance("TLS");
