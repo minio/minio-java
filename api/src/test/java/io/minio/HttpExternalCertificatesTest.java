@@ -65,7 +65,7 @@ public class HttpExternalCertificatesTest {
         });
   }
 
-  @Parameter() public String name;
+  @Parameter public String name;
 
   @Parameter(1)
   public String bundle;

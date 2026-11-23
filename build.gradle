@@ -135,7 +135,7 @@ subprojects {
             target '**/*.java'
             importOrder 'edu', 'com', 'io', 'java', 'javax', 'org', ''
             removeUnusedImports()
-            googleJavaFormat('1.36.1')
+            googleJavaFormat('2.0.0')
         }
         groovyGradle {
             target '*.gradle'

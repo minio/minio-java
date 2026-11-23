@@ -55,10 +55,9 @@ public class GetObjectAttributesArgs extends ObjectReadArgs {
     }
 
     public Builder objectAttributes(String[] objectAttributes) {
-      operations.add(
-          args ->
-              args.objectAttributes =
-                  objectAttributes == null ? null : Arrays.asList(objectAttributes));
+      operations.add(args ->
+          args.objectAttributes =
+              objectAttributes == null ? null : Arrays.asList(objectAttributes));
       return this;
     }
 

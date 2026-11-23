@@ -328,15 +328,14 @@ public class MinioAsyncClient extends BaseS3Client {
             (args.versionId() != null)
                 ? new Http.QueryParameters("versionId", args.versionId())
                 : null)
-        .thenApply(
-            response -> {
-              return new GetObjectResponse(
-                  response.headers(),
-                  args.bucket(),
-                  args.region(),
-                  args.object(),
-                  response.body().byteStream());
-            });
+        .thenApply(response -> {
+          return new GetObjectResponse(
+              response.headers(),
+              args.bucket(),
+              args.region(),
+              args.object(),
+              response.body().byteStream());
+        });
   }
 
   private void downloadObject(
@@ -543,36 +542,34 @@ public class MinioAsyncClient extends BaseS3Client {
             ? headObject(new HeadObjectArgs(args.source()))
             : CompletableFuture.completedFuture((HeadObjectResponse) null);
     return future
-        .thenApply(
-            response ->
-                response == null
-                    ? args
-                    : new CopyObjectArgs(
-                        args, new SourceObject(args.source(), response.size(), response.etag())))
-        .thenCompose(
-            copyArgs -> {
-              long size = copyArgs.source().objectSize();
-              if (size < ObjectWriteArgs.MAX_PART_SIZE
-                  && copyArgs.source().offset() == null
-                  && copyArgs.source().length() == null) {
-                return super.copyObject(copyArgs);
-              }
+        .thenApply(response ->
+            response == null
+                ? args
+                : new CopyObjectArgs(
+                    args, new SourceObject(args.source(), response.size(), response.etag())))
+        .thenCompose(copyArgs -> {
+          long size = copyArgs.source().objectSize();
+          if (size < ObjectWriteArgs.MAX_PART_SIZE
+              && copyArgs.source().offset() == null
+              && copyArgs.source().length() == null) {
+            return super.copyObject(copyArgs);
+          }
 
-              if (size > ObjectWriteArgs.MAX_PART_SIZE) {
-                if (copyArgs.metadataDirective() == Directive.COPY) {
-                  throw new IllegalArgumentException(
-                      "COPY metadata directive is not applicable to source object size greater"
-                          + " than 5 GiB");
-                }
-              }
-              if (copyArgs.taggingDirective() == Directive.COPY) {
-                throw new IllegalArgumentException(
-                    "COPY tagging directive is not applicable to source object size greater than"
-                        + " 5 GiB");
-              }
+          if (size > ObjectWriteArgs.MAX_PART_SIZE) {
+            if (copyArgs.metadataDirective() == Directive.COPY) {
+              throw new IllegalArgumentException(
+                  "COPY metadata directive is not applicable to source object size greater"
+                      + " than 5 GiB");
+            }
+          }
+          if (copyArgs.taggingDirective() == Directive.COPY) {
+            throw new IllegalArgumentException(
+                "COPY tagging directive is not applicable to source object size greater than"
+                    + " 5 GiB");
+          }
 
-              return composeObject(new ComposeObjectArgs(copyArgs));
-            });
+          return composeObject(new ComposeObjectArgs(copyArgs));
+        });
   }
 
   /** Calculates part count for given list of {@link SourceObject}. */
@@ -761,26 +758,23 @@ public class MinioAsyncClient extends BaseS3Client {
       ComposeObjectArgs args, int partCount) {
     String[] uploadId = {null};
     return createMultipartUpload(new CreateMultipartUploadArgs(args))
-        .thenCompose(
-            response -> {
-              uploadId[0] = response.result().uploadId();
-              return uploadParts(args, partCount, uploadId[0]);
-            })
-        .thenCompose(
-            parts ->
-                completeMultipartUpload(new CompleteMultipartUploadArgs(args, uploadId[0], parts)))
-        .exceptionally(
-            e -> {
-              if (e instanceof CompletionException) e = e.getCause();
-              if (uploadId[0] != null) {
-                try {
-                  abortMultipartUpload(new AbortMultipartUploadArgs(args, uploadId[0])).join();
-                } catch (CompletionException ex) {
-                  e.addSuppressed(ex.getCause());
-                }
-              }
-              throw new CompletionException(e);
-            });
+        .thenCompose(response -> {
+          uploadId[0] = response.result().uploadId();
+          return uploadParts(args, partCount, uploadId[0]);
+        })
+        .thenCompose(parts ->
+            completeMultipartUpload(new CompleteMultipartUploadArgs(args, uploadId[0], parts)))
+        .exceptionally(e -> {
+          if (e instanceof CompletionException) e = e.getCause();
+          if (uploadId[0] != null) {
+            try {
+              abortMultipartUpload(new AbortMultipartUploadArgs(args, uploadId[0])).join();
+            } catch (CompletionException ex) {
+              e.addSuppressed(ex.getCause());
+            }
+          }
+          throw new CompletionException(e);
+        });
   }
 
   /**
@@ -836,15 +830,14 @@ public class MinioAsyncClient extends BaseS3Client {
     args.validateSse(this.baseUrl.isHttps());
 
     return calculatePartCount(args.sources())
-        .thenCompose(
-            partCount -> {
-              if (partCount == 1
-                  && args.sources().get(0).offset() == null
-                  && args.sources().get(0).length() == null) {
-                return copyObject(new CopyObjectArgs(args));
-              }
-              return composeObject(args, partCount);
-            });
+        .thenCompose(partCount -> {
+          if (partCount == 1
+              && args.sources().get(0).offset() == null
+              && args.sources().get(0).length() == null) {
+            return copyObject(new CopyObjectArgs(args));
+          }
+          return composeObject(args, partCount);
+        });
   }
 
   /**
@@ -1281,10 +1274,9 @@ public class MinioAsyncClient extends BaseS3Client {
    */
   public CompletableFuture<List<ListAllMyBucketsResult.Bucket>> listBuckets() {
     return listBucketsAPI(ListBucketsArgs.builder().build())
-        .thenApply(
-            response -> {
-              return response.result().buckets();
-            });
+        .thenApply(response -> {
+          return response.result().buckets();
+        });
   }
 
   /**
@@ -1418,24 +1410,22 @@ public class MinioAsyncClient extends BaseS3Client {
    */
   public CompletableFuture<Boolean> bucketExists(BucketExistsArgs args) {
     return executeHeadAsync(args, null, null)
-        .exceptionally(
-            e -> {
-              if (e instanceof CompletionException) e = e.getCause();
-              if (e instanceof ErrorResponseException) {
-                if (((ErrorResponseException) e).errorResponse().code().equals(NO_SUCH_BUCKET)) {
-                  return null;
-                }
-              }
-              throw new CompletionException(e);
-            })
-        .thenApply(
-            response -> {
-              try {
-                return response != null;
-              } finally {
-                if (response != null) response.close();
-              }
-            });
+        .exceptionally(e -> {
+          if (e instanceof CompletionException) e = e.getCause();
+          if (e instanceof ErrorResponseException) {
+            if (((ErrorResponseException) e).errorResponse().code().equals(NO_SUCH_BUCKET)) {
+              return null;
+            }
+          }
+          throw new CompletionException(e);
+        })
+        .thenApply(response -> {
+          try {
+            return response != null;
+          } finally {
+            if (response != null) response.close();
+          }
+        });
   }
 
   /**
@@ -1511,16 +1501,15 @@ public class MinioAsyncClient extends BaseS3Client {
       GetBucketVersioningArgs args) {
     checkArgs(args);
     return executeGetAsync(args, null, new Http.QueryParameters("versioning", ""))
-        .thenApply(
-            response -> {
-              try {
-                return Xml.unmarshal(VersioningConfiguration.class, response.body().charStream());
-              } catch (XmlParserException e) {
-                throw new CompletionException(e);
-              } finally {
-                response.close();
-              }
-            });
+        .thenApply(response -> {
+          try {
+            return Xml.unmarshal(VersioningConfiguration.class, response.body().charStream());
+          } catch (XmlParserException e) {
+            throw new CompletionException(e);
+          } finally {
+            response.close();
+          }
+        });
   }
 
   /**
@@ -1588,16 +1577,15 @@ public class MinioAsyncClient extends BaseS3Client {
       GetObjectLockConfigurationArgs args) {
     checkArgs(args);
     return executeGetAsync(args, null, new Http.QueryParameters("object-lock", ""))
-        .thenApply(
-            response -> {
-              try {
-                return Xml.unmarshal(ObjectLockConfiguration.class, response.body().charStream());
-              } catch (XmlParserException e) {
-                throw new CompletionException(e);
-              } finally {
-                response.close();
-              }
-            });
+        .thenApply(response -> {
+          try {
+            return Xml.unmarshal(ObjectLockConfiguration.class, response.body().charStream());
+          } catch (XmlParserException e) {
+            throw new CompletionException(e);
+          } finally {
+            response.close();
+          }
+        });
   }
 
   /**
@@ -1658,30 +1646,28 @@ public class MinioAsyncClient extends BaseS3Client {
     Http.QueryParameters queryParams = new Http.QueryParameters("retention", "");
     if (args.versionId() != null) queryParams.put("versionId", args.versionId());
     return executeGetAsync(args, null, queryParams)
-        .exceptionally(
-            e -> {
-              if (e instanceof CompletionException) e = e.getCause();
-              if (e instanceof ErrorResponseException) {
-                if (((ErrorResponseException) e)
-                    .errorResponse()
-                    .code()
-                    .equals(NO_SUCH_OBJECT_LOCK_CONFIGURATION)) {
-                  return null;
-                }
-              }
-              throw new CompletionException(e);
-            })
-        .thenApply(
-            response -> {
-              if (response == null) return null;
-              try {
-                return Xml.unmarshal(Retention.class, response.body().charStream());
-              } catch (XmlParserException e) {
-                throw new CompletionException(e);
-              } finally {
-                response.close();
-              }
-            });
+        .exceptionally(e -> {
+          if (e instanceof CompletionException) e = e.getCause();
+          if (e instanceof ErrorResponseException) {
+            if (((ErrorResponseException) e)
+                .errorResponse()
+                .code()
+                .equals(NO_SUCH_OBJECT_LOCK_CONFIGURATION)) {
+              return null;
+            }
+          }
+          throw new CompletionException(e);
+        })
+        .thenApply(response -> {
+          if (response == null) return null;
+          try {
+            return Xml.unmarshal(Retention.class, response.body().charStream());
+          } catch (XmlParserException e) {
+            throw new CompletionException(e);
+          } finally {
+            response.close();
+          }
+        });
   }
 
   /**
@@ -1761,31 +1747,29 @@ public class MinioAsyncClient extends BaseS3Client {
     Http.QueryParameters queryParams = new Http.QueryParameters("legal-hold", "");
     if (args.versionId() != null) queryParams.put("versionId", args.versionId());
     return executeGetAsync(args, null, queryParams)
-        .exceptionally(
-            e -> {
-              if (e instanceof CompletionException) e = e.getCause();
-              if (e instanceof ErrorResponseException) {
-                if (((ErrorResponseException) e)
-                    .errorResponse()
-                    .code()
-                    .equals(NO_SUCH_OBJECT_LOCK_CONFIGURATION)) {
-                  return null;
-                }
-              }
-              throw new CompletionException(e);
-            })
-        .thenApply(
-            response -> {
-              if (response == null) return false;
-              try {
-                LegalHold result = Xml.unmarshal(LegalHold.class, response.body().charStream());
-                return result.status();
-              } catch (XmlParserException e) {
-                throw new CompletionException(e);
-              } finally {
-                response.close();
-              }
-            });
+        .exceptionally(e -> {
+          if (e instanceof CompletionException) e = e.getCause();
+          if (e instanceof ErrorResponseException) {
+            if (((ErrorResponseException) e)
+                .errorResponse()
+                .code()
+                .equals(NO_SUCH_OBJECT_LOCK_CONFIGURATION)) {
+              return null;
+            }
+          }
+          throw new CompletionException(e);
+        })
+        .thenApply(response -> {
+          if (response == null) return false;
+          try {
+            LegalHold result = Xml.unmarshal(LegalHold.class, response.body().charStream());
+            return result.status();
+          } catch (XmlParserException e) {
+            throw new CompletionException(e);
+          } finally {
+            response.close();
+          }
+        });
   }
 
   /**
@@ -1814,38 +1798,35 @@ public class MinioAsyncClient extends BaseS3Client {
       ByteBuffer buffer,
       long partSize,
       List<UploadPartResponse> responses) {
-    return supplyAsync(
-            () ->
-                new UploadPartArgs(
-                    args,
-                    uploadId,
-                    partReader.partNumber(),
-                    buffer,
-                    Checksum.makeHeaders(
-                        partReader.hashers(), addContentSha256, addSha256Checksum)))
+    return supplyAsync(() ->
+            new UploadPartArgs(
+                args,
+                uploadId,
+                partReader.partNumber(),
+                buffer,
+                Checksum.makeHeaders(partReader.hashers(), addContentSha256, addSha256Checksum)))
         .thenCompose(partArgs -> uploadPart(partArgs))
-        .thenCompose(
-            response -> {
-              responses.add(response);
-              try {
-                buffer.reset();
-                if (partReader.partNumber() == partReader.partCount()) {
-                  return CompletableFuture.completedFuture(responses);
-                }
-                partReader.read(buffer);
-              } catch (MinioException e) {
-                return Utils.failedFuture(e);
-              }
-              return uploadPartsSequentially(
-                  args,
-                  uploadId,
-                  partReader,
-                  addContentSha256,
-                  addSha256Checksum,
-                  buffer,
-                  partSize,
-                  responses);
-            });
+        .thenCompose(response -> {
+          responses.add(response);
+          try {
+            buffer.reset();
+            if (partReader.partNumber() == partReader.partCount()) {
+              return CompletableFuture.completedFuture(responses);
+            }
+            partReader.read(buffer);
+          } catch (MinioException e) {
+            return Utils.failedFuture(e);
+          }
+          return uploadPartsSequentially(
+              args,
+              uploadId,
+              partReader,
+              addContentSha256,
+              addSha256Checksum,
+              buffer,
+              partSize,
+              responses);
+        });
   }
 
   private CompletableFuture<List<UploadPartResponse>> uploadPartsParallelly(
@@ -1865,101 +1846,99 @@ public class MinioAsyncClient extends BaseS3Client {
     AtomicBoolean errorOccurred = new AtomicBoolean(false);
     ConcurrentLinkedQueue<Throwable> exceptions = new ConcurrentLinkedQueue<>();
 
-    return supplyAsync(
-        () -> {
-          try {
-            // Start uploader workers
-            for (int i = 0; i < parallelUploads; i++) {
-              Future<?> result =
-                  uploadExecutor.submit(
-                      () -> {
-                        try {
-                          while (!errorOccurred.get()) {
-                            UploadPartArgs.Wrapper part = queue.take();
-                            if (part.args() == null) break; // poison pill
-                            try {
-                              UploadPartResponse response = uploadPart(part.args()).join();
-                              uploadResults.add(response);
-                            } finally {
-                              // Always return the buffer to the pool, even on upload failure.
-                              bufferPool.put(part.args().buffer());
-                            }
-                          }
-                        } catch (Throwable t) {
-                          // Catch Throwable, not RuntimeException: an Error would otherwise escape
-                          // into the discarded Future while the finally below still counts down
-                          // doneLatch, leaving errorOccurred false and exceptions empty. The upload
-                          // would then complete with a short part list and silently assemble a
-                          // truncated object. uploadPart().join() failures surface here as
-                          // CompletionException. The recorded throwable is rethrown to the caller
-                          // below, so nothing is swallowed.
-                          if (t instanceof InterruptedException) Thread.currentThread().interrupt();
-                          errorOccurred.set(true); // signal to all threads and the reader
-                          exceptions.add(t);
-                        } finally {
-                          doneLatch.countDown();
-                        }
-                      });
-              if (result == null) {
-                throw new IllegalStateException(
-                    "uploadExecutor.submit() returns null; this should not happen");
-              }
-            }
-
-            // Reader: submit initial buffer
-            offerUntilDoneOrError(
-                queue,
-                errorOccurred,
-                new UploadPartArgs.Wrapper(
-                    new UploadPartArgs(
-                        args,
-                        uploadId,
-                        partReader.partNumber(),
-                        buffer,
-                        Checksum.makeHeaders(
-                            partReader.hashers(), addContentSha256, addSha256Checksum))));
-
-            // Reader: loop to submit remaining parts
-            while (partReader.partNumber() != partReader.partCount() && !errorOccurred.get()) {
-              ByteBuffer buf = bufferPool.take();
-              partReader.read(buf);
-              offerUntilDoneOrError(
-                  queue,
-                  errorOccurred,
-                  new UploadPartArgs.Wrapper(
-                      new UploadPartArgs(
-                          args,
-                          uploadId,
-                          partReader.partNumber(),
-                          buf,
-                          Checksum.makeHeaders(
-                              partReader.hashers(), addContentSha256, addSha256Checksum))));
-            }
-
-            // Signal all workers to stop with poison pills
-            for (int i = 0; i < parallelUploads; i++) {
-              offerUntilDoneOrError(queue, errorOccurred, new UploadPartArgs.Wrapper(null));
-            }
-
-            doneLatch.await();
-            uploadExecutor.shutdown();
-
-            if (!exceptions.isEmpty()) {
-              CompletionException combined =
-                  new CompletionException("uploadPartsParallelly failed", exceptions.peek());
-              exceptions.stream().skip(1).forEach(combined::addSuppressed);
-              throw combined;
-            }
-
-            uploadResults.sort(Comparator.comparingInt(r -> r.part().partNumber()));
-            return uploadResults;
-
-          } catch (InterruptedException | MinioException e) {
-            throw new CompletionException(e);
-          } finally {
-            uploadExecutor.shutdownNow(); // ensure executor exits on error
+    return supplyAsync(() -> {
+      try {
+        // Start uploader workers
+        for (int i = 0; i < parallelUploads; i++) {
+          Future<?> result =
+              uploadExecutor.submit(() -> {
+                try {
+                  while (!errorOccurred.get()) {
+                    UploadPartArgs.Wrapper part = queue.take();
+                    if (part.args() == null) break; // poison pill
+                    try {
+                      UploadPartResponse response = uploadPart(part.args()).join();
+                      uploadResults.add(response);
+                    } finally {
+                      // Always return the buffer to the pool, even on upload failure.
+                      bufferPool.put(part.args().buffer());
+                    }
+                  }
+                } catch (Throwable t) {
+                  // Catch Throwable, not RuntimeException: an Error would otherwise escape
+                  // into the discarded Future while the finally below still counts down
+                  // doneLatch, leaving errorOccurred false and exceptions empty. The upload
+                  // would then complete with a short part list and silently assemble a
+                  // truncated object. uploadPart().join() failures surface here as
+                  // CompletionException. The recorded throwable is rethrown to the caller
+                  // below, so nothing is swallowed.
+                  if (t instanceof InterruptedException) Thread.currentThread().interrupt();
+                  errorOccurred.set(true); // signal to all threads and the reader
+                  exceptions.add(t);
+                } finally {
+                  doneLatch.countDown();
+                }
+              });
+          if (result == null) {
+            throw new IllegalStateException(
+                "uploadExecutor.submit() returns null; this should not happen");
           }
-        });
+        }
+
+        // Reader: submit initial buffer
+        offerUntilDoneOrError(
+            queue,
+            errorOccurred,
+            new UploadPartArgs.Wrapper(
+                new UploadPartArgs(
+                    args,
+                    uploadId,
+                    partReader.partNumber(),
+                    buffer,
+                    Checksum.makeHeaders(
+                        partReader.hashers(), addContentSha256, addSha256Checksum))));
+
+        // Reader: loop to submit remaining parts
+        while (partReader.partNumber() != partReader.partCount() && !errorOccurred.get()) {
+          ByteBuffer buf = bufferPool.take();
+          partReader.read(buf);
+          offerUntilDoneOrError(
+              queue,
+              errorOccurred,
+              new UploadPartArgs.Wrapper(
+                  new UploadPartArgs(
+                      args,
+                      uploadId,
+                      partReader.partNumber(),
+                      buf,
+                      Checksum.makeHeaders(
+                          partReader.hashers(), addContentSha256, addSha256Checksum))));
+        }
+
+        // Signal all workers to stop with poison pills
+        for (int i = 0; i < parallelUploads; i++) {
+          offerUntilDoneOrError(queue, errorOccurred, new UploadPartArgs.Wrapper(null));
+        }
+
+        doneLatch.await();
+        uploadExecutor.shutdown();
+
+        if (!exceptions.isEmpty()) {
+          CompletionException combined =
+              new CompletionException("uploadPartsParallelly failed", exceptions.peek());
+          exceptions.stream().skip(1).forEach(combined::addSuppressed);
+          throw combined;
+        }
+
+        uploadResults.sort(Comparator.comparingInt(r -> r.part().partNumber()));
+        return uploadResults;
+
+      } catch (InterruptedException | MinioException e) {
+        throw new CompletionException(e);
+      } finally {
+        uploadExecutor.shutdownNow(); // ensure executor exits on error
+      }
+    });
   }
 
   /**
@@ -2091,54 +2070,51 @@ public class MinioAsyncClient extends BaseS3Client {
     final ByteBuffer finalBuffer = buffer;
     final int finalParallelUploads = parallelUploads;
     return createMultipartUpload(new CreateMultipartUploadArgs(args, contentType, algorithm))
-        .thenCompose(
-            response -> {
-              uploadId[0] = response.result().uploadId();
-              // Do sequential multipart uploads
-              if (finalParallelUploads == 1) {
-                return uploadPartsSequentially(
+        .thenCompose(response -> {
+          uploadId[0] = response.result().uploadId();
+          // Do sequential multipart uploads
+          if (finalParallelUploads == 1) {
+            return uploadPartsSequentially(
+                args,
+                uploadId[0],
+                finalPartReader,
+                addContentSha256,
+                addSha256Checksum,
+                finalBuffer,
+                args.partSize(),
+                new ArrayList<UploadPartResponse>());
+          }
+
+          // Do sequential multipart uploads
+          return uploadPartsParallelly(
+              args,
+              uploadId[0],
+              finalPartReader,
+              addContentSha256,
+              addSha256Checksum,
+              finalBuffer,
+              args.partSize(),
+              finalParallelUploads);
+        })
+        .thenCompose(responses ->
+            completeMultipartUpload(
+                new CompleteMultipartUploadArgs(
                     args,
                     uploadId[0],
-                    finalPartReader,
-                    addContentSha256,
-                    addSha256Checksum,
-                    finalBuffer,
-                    args.partSize(),
-                    new ArrayList<UploadPartResponse>());
-              }
-
-              // Do sequential multipart uploads
-              return uploadPartsParallelly(
-                  args,
-                  uploadId[0],
-                  finalPartReader,
-                  addContentSha256,
-                  addSha256Checksum,
-                  finalBuffer,
-                  args.partSize(),
-                  finalParallelUploads);
-            })
-        .thenCompose(
-            responses ->
-                completeMultipartUpload(
-                    new CompleteMultipartUploadArgs(
-                        args,
-                        uploadId[0],
-                        responses.stream()
-                            .map(UploadPartResponse::part)
-                            .toArray(io.minio.messages.Part[]::new))))
-        .exceptionally(
-            e -> {
-              if (e instanceof CompletionException) e = e.getCause();
-              if (uploadId[0] != null) {
-                try {
-                  abortMultipartUpload(new AbortMultipartUploadArgs(args, uploadId[0])).join();
-                } catch (CompletionException ex) {
-                  e.addSuppressed(ex.getCause());
-                }
-              }
-              throw new CompletionException(e);
-            });
+                    responses.stream()
+                        .map(UploadPartResponse::part)
+                        .toArray(io.minio.messages.Part[]::new))))
+        .exceptionally(e -> {
+          if (e instanceof CompletionException) e = e.getCause();
+          if (uploadId[0] != null) {
+            try {
+              abortMultipartUpload(new AbortMultipartUploadArgs(args, uploadId[0])).join();
+            } catch (CompletionException ex) {
+              e.addSuppressed(ex.getCause());
+            }
+          }
+          throw new CompletionException(e);
+        });
   }
 
   /**
@@ -2230,25 +2206,23 @@ public class MinioAsyncClient extends BaseS3Client {
     try {
       final RandomAccessFile file = new RandomAccessFile(args.filename(), "r");
       return putObject(args, file, args.contentType(), !this.baseUrl.isHttps())
-          .exceptionally(
-              e -> {
-                if (e instanceof CompletionException) e = e.getCause();
-                try {
-                  file.close();
-                } catch (IOException ex) {
-                  e.addSuppressed(new MinioException(ex));
-                }
-                throw new CompletionException(e);
-              })
-          .thenApply(
-              objectWriteResponse -> {
-                try {
-                  file.close();
-                } catch (IOException e) {
-                  throw new CompletionException(new MinioException(e));
-                }
-                return objectWriteResponse;
-              });
+          .exceptionally(e -> {
+            if (e instanceof CompletionException) e = e.getCause();
+            try {
+              file.close();
+            } catch (IOException ex) {
+              e.addSuppressed(new MinioException(ex));
+            }
+            throw new CompletionException(e);
+          })
+          .thenApply(objectWriteResponse -> {
+            try {
+              file.close();
+            } catch (IOException e) {
+              throw new CompletionException(new MinioException(e));
+            }
+            return objectWriteResponse;
+          });
     } catch (IOException e) {
       return Utils.failedFuture(new MinioException(e));
     }
@@ -2269,55 +2243,49 @@ public class MinioAsyncClient extends BaseS3Client {
   public CompletableFuture<String> getBucketPolicy(GetBucketPolicyArgs args) {
     checkArgs(args);
     return executeGetAsync(args, null, new Http.QueryParameters("policy", ""))
-        .exceptionally(
-            e -> {
-              if (e instanceof CompletionException) e = e.getCause();
-              if (e instanceof ErrorResponseException) {
-                if (((ErrorResponseException) e)
-                    .errorResponse()
-                    .code()
-                    .equals(NO_SUCH_BUCKET_POLICY)) {
-                  return null;
+        .exceptionally(e -> {
+          if (e instanceof CompletionException) e = e.getCause();
+          if (e instanceof ErrorResponseException) {
+            if (((ErrorResponseException) e).errorResponse().code().equals(NO_SUCH_BUCKET_POLICY)) {
+              return null;
+            }
+          }
+          throw new CompletionException(e);
+        })
+        .thenApply(response -> {
+          if (response == null) return "";
+          try {
+            byte[] buf = new byte[MAX_BUCKET_POLICY_SIZE];
+            int bytesRead = 0;
+            bytesRead = response.body().byteStream().read(buf, 0, MAX_BUCKET_POLICY_SIZE);
+            if (bytesRead < 0) {
+              throw new CompletionException(
+                  new IOException("unexpected EOF when reading bucket policy"));
+            }
+
+            // Read one byte extra to ensure only MAX_BUCKET_POLICY_SIZE data is sent by the
+            // server.
+            if (bytesRead == MAX_BUCKET_POLICY_SIZE) {
+              int byteRead = 0;
+              while (byteRead == 0) {
+                byteRead = response.body().byteStream().read();
+                if (byteRead < 0) {
+                  break; // reached EOF which is fine.
+                }
+
+                if (byteRead > 0) {
+                  throw new CompletionException(new BucketPolicyTooLargeException(args.bucket()));
                 }
               }
-              throw new CompletionException(e);
-            })
-        .thenApply(
-            response -> {
-              if (response == null) return "";
-              try {
-                byte[] buf = new byte[MAX_BUCKET_POLICY_SIZE];
-                int bytesRead = 0;
-                bytesRead = response.body().byteStream().read(buf, 0, MAX_BUCKET_POLICY_SIZE);
-                if (bytesRead < 0) {
-                  throw new CompletionException(
-                      new IOException("unexpected EOF when reading bucket policy"));
-                }
+            }
 
-                // Read one byte extra to ensure only MAX_BUCKET_POLICY_SIZE data is sent by the
-                // server.
-                if (bytesRead == MAX_BUCKET_POLICY_SIZE) {
-                  int byteRead = 0;
-                  while (byteRead == 0) {
-                    byteRead = response.body().byteStream().read();
-                    if (byteRead < 0) {
-                      break; // reached EOF which is fine.
-                    }
-
-                    if (byteRead > 0) {
-                      throw new CompletionException(
-                          new BucketPolicyTooLargeException(args.bucket()));
-                    }
-                  }
-                }
-
-                return new String(buf, 0, bytesRead, StandardCharsets.UTF_8);
-              } catch (IOException e) {
-                throw new CompletionException(new MinioException(e));
-              } finally {
-                response.close();
-              }
-            });
+            return new String(buf, 0, bytesRead, StandardCharsets.UTF_8);
+          } catch (IOException e) {
+            throw new CompletionException(new MinioException(e));
+          } finally {
+            response.close();
+          }
+        });
   }
 
   /**
@@ -2380,23 +2348,18 @@ public class MinioAsyncClient extends BaseS3Client {
   public CompletableFuture<Void> deleteBucketPolicy(DeleteBucketPolicyArgs args) {
     checkArgs(args);
     return executeDeleteAsync(args, null, new Http.QueryParameters("policy", ""))
-        .exceptionally(
-            e -> {
-              if (e instanceof CompletionException) e = e.getCause();
-              if (e instanceof ErrorResponseException) {
-                if (((ErrorResponseException) e)
-                    .errorResponse()
-                    .code()
-                    .equals(NO_SUCH_BUCKET_POLICY)) {
-                  return null;
-                }
-              }
-              throw new CompletionException(e);
-            })
-        .thenAccept(
-            response -> {
-              if (response != null) response.close();
-            });
+        .exceptionally(e -> {
+          if (e instanceof CompletionException) e = e.getCause();
+          if (e instanceof ErrorResponseException) {
+            if (((ErrorResponseException) e).errorResponse().code().equals(NO_SUCH_BUCKET_POLICY)) {
+              return null;
+            }
+          }
+          throw new CompletionException(e);
+        })
+        .thenAccept(response -> {
+          if (response != null) response.close();
+        });
   }
 
   /**
@@ -2467,30 +2430,28 @@ public class MinioAsyncClient extends BaseS3Client {
   public CompletableFuture<LifecycleConfiguration> getBucketLifecycle(GetBucketLifecycleArgs args) {
     checkArgs(args);
     return executeGetAsync(args, null, new Http.QueryParameters("lifecycle", ""))
-        .exceptionally(
-            e -> {
-              if (e instanceof CompletionException) e = e.getCause();
-              if (e instanceof ErrorResponseException) {
-                if (((ErrorResponseException) e)
-                    .errorResponse()
-                    .code()
-                    .equals("NoSuchLifecycleConfiguration")) {
-                  return null;
-                }
-              }
-              throw new CompletionException(e);
-            })
-        .thenApply(
-            response -> {
-              if (response == null) return null;
-              try {
-                return Xml.unmarshal(LifecycleConfiguration.class, response.body().charStream());
-              } catch (XmlParserException e) {
-                throw new CompletionException(e);
-              } finally {
-                response.close();
-              }
-            });
+        .exceptionally(e -> {
+          if (e instanceof CompletionException) e = e.getCause();
+          if (e instanceof ErrorResponseException) {
+            if (((ErrorResponseException) e)
+                .errorResponse()
+                .code()
+                .equals("NoSuchLifecycleConfiguration")) {
+              return null;
+            }
+          }
+          throw new CompletionException(e);
+        })
+        .thenApply(response -> {
+          if (response == null) return null;
+          try {
+            return Xml.unmarshal(LifecycleConfiguration.class, response.body().charStream());
+          } catch (XmlParserException e) {
+            throw new CompletionException(e);
+          } finally {
+            response.close();
+          }
+        });
   }
 
   /**
@@ -2509,16 +2470,15 @@ public class MinioAsyncClient extends BaseS3Client {
       GetBucketNotificationArgs args) {
     checkArgs(args);
     return executeGetAsync(args, null, new Http.QueryParameters("notification", ""))
-        .thenApply(
-            response -> {
-              try {
-                return Xml.unmarshal(NotificationConfiguration.class, response.body().charStream());
-              } catch (XmlParserException e) {
-                throw new CompletionException(e);
-              } finally {
-                response.close();
-              }
-            });
+        .thenApply(response -> {
+          try {
+            return Xml.unmarshal(NotificationConfiguration.class, response.body().charStream());
+          } catch (XmlParserException e) {
+            throw new CompletionException(e);
+          } finally {
+            response.close();
+          }
+        });
   }
 
   /**
@@ -2599,30 +2559,28 @@ public class MinioAsyncClient extends BaseS3Client {
       GetBucketReplicationArgs args) {
     checkArgs(args);
     return executeGetAsync(args, null, new Http.QueryParameters("replication", ""))
-        .exceptionally(
-            e -> {
-              if (e instanceof CompletionException) e = e.getCause();
-              if (e instanceof ErrorResponseException) {
-                if (((ErrorResponseException) e)
-                    .errorResponse()
-                    .code()
-                    .equals("ReplicationConfigurationNotFoundError")) {
-                  return null;
-                }
-              }
-              throw new CompletionException(e);
-            })
-        .thenApply(
-            response -> {
-              if (response == null) return null;
-              try {
-                return Xml.unmarshal(ReplicationConfiguration.class, response.body().charStream());
-              } catch (XmlParserException e) {
-                throw new CompletionException(e);
-              } finally {
-                response.close();
-              }
-            });
+        .exceptionally(e -> {
+          if (e instanceof CompletionException) e = e.getCause();
+          if (e instanceof ErrorResponseException) {
+            if (((ErrorResponseException) e)
+                .errorResponse()
+                .code()
+                .equals("ReplicationConfigurationNotFoundError")) {
+              return null;
+            }
+          }
+          throw new CompletionException(e);
+        })
+        .thenApply(response -> {
+          if (response == null) return null;
+          try {
+            return Xml.unmarshal(ReplicationConfiguration.class, response.body().charStream());
+          } catch (XmlParserException e) {
+            throw new CompletionException(e);
+          } finally {
+            response.close();
+          }
+        });
   }
 
   /**
@@ -2849,30 +2807,28 @@ public class MinioAsyncClient extends BaseS3Client {
   public CompletableFuture<SseConfiguration> getBucketEncryption(GetBucketEncryptionArgs args) {
     checkArgs(args);
     return executeGetAsync(args, null, new Http.QueryParameters("encryption", ""))
-        .exceptionally(
-            e -> {
-              if (e instanceof CompletionException) e = e.getCause();
-              if (e instanceof ErrorResponseException) {
-                if (((ErrorResponseException) e)
-                    .errorResponse()
-                    .code()
-                    .equals(SERVER_SIDE_ENCRYPTION_CONFIGURATION_NOT_FOUND_ERROR)) {
-                  return null;
-                }
-              }
-              throw new CompletionException(e);
-            })
-        .thenApply(
-            response -> {
-              if (response == null) return new SseConfiguration(null);
-              try {
-                return Xml.unmarshal(SseConfiguration.class, response.body().charStream());
-              } catch (XmlParserException e) {
-                throw new CompletionException(e);
-              } finally {
-                response.close();
-              }
-            });
+        .exceptionally(e -> {
+          if (e instanceof CompletionException) e = e.getCause();
+          if (e instanceof ErrorResponseException) {
+            if (((ErrorResponseException) e)
+                .errorResponse()
+                .code()
+                .equals(SERVER_SIDE_ENCRYPTION_CONFIGURATION_NOT_FOUND_ERROR)) {
+              return null;
+            }
+          }
+          throw new CompletionException(e);
+        })
+        .thenApply(response -> {
+          if (response == null) return new SseConfiguration(null);
+          try {
+            return Xml.unmarshal(SseConfiguration.class, response.body().charStream());
+          } catch (XmlParserException e) {
+            throw new CompletionException(e);
+          } finally {
+            response.close();
+          }
+        });
   }
 
   /**
@@ -2889,23 +2845,21 @@ public class MinioAsyncClient extends BaseS3Client {
   public CompletableFuture<Void> deleteBucketEncryption(DeleteBucketEncryptionArgs args) {
     checkArgs(args);
     return executeDeleteAsync(args, null, new Http.QueryParameters("encryption", ""))
-        .exceptionally(
-            e -> {
-              if (e instanceof CompletionException) e = e.getCause();
-              if (e instanceof ErrorResponseException) {
-                if (((ErrorResponseException) e)
-                    .errorResponse()
-                    .code()
-                    .equals(SERVER_SIDE_ENCRYPTION_CONFIGURATION_NOT_FOUND_ERROR)) {
-                  return null;
-                }
-              }
-              throw new CompletionException(e);
-            })
-        .thenAccept(
-            response -> {
-              if (response != null) response.close();
-            });
+        .exceptionally(e -> {
+          if (e instanceof CompletionException) e = e.getCause();
+          if (e instanceof ErrorResponseException) {
+            if (((ErrorResponseException) e)
+                .errorResponse()
+                .code()
+                .equals(SERVER_SIDE_ENCRYPTION_CONFIGURATION_NOT_FOUND_ERROR)) {
+              return null;
+            }
+          }
+          throw new CompletionException(e);
+        })
+        .thenAccept(response -> {
+          if (response != null) response.close();
+        });
   }
 
   /**
@@ -2922,27 +2876,25 @@ public class MinioAsyncClient extends BaseS3Client {
   public CompletableFuture<Tags> getBucketTags(GetBucketTagsArgs args) {
     checkArgs(args);
     return executeGetAsync(args, null, new Http.QueryParameters("tagging", ""))
-        .exceptionally(
-            e -> {
-              if (e instanceof CompletionException) e = e.getCause();
-              if (e instanceof ErrorResponseException) {
-                if (((ErrorResponseException) e).errorResponse().code().equals("NoSuchTagSet")) {
-                  return null;
-                }
-              }
-              throw new CompletionException(e);
-            })
-        .thenApply(
-            response -> {
-              if (response == null) return new Tags();
-              try {
-                return Xml.unmarshal(Tags.class, response.body().charStream());
-              } catch (XmlParserException e) {
-                throw new CompletionException(e);
-              } finally {
-                response.close();
-              }
-            });
+        .exceptionally(e -> {
+          if (e instanceof CompletionException) e = e.getCause();
+          if (e instanceof ErrorResponseException) {
+            if (((ErrorResponseException) e).errorResponse().code().equals("NoSuchTagSet")) {
+              return null;
+            }
+          }
+          throw new CompletionException(e);
+        })
+        .thenApply(response -> {
+          if (response == null) return new Tags();
+          try {
+            return Xml.unmarshal(Tags.class, response.body().charStream());
+          } catch (XmlParserException e) {
+            throw new CompletionException(e);
+          } finally {
+            response.close();
+          }
+        });
   }
 
   /**
@@ -3005,16 +2957,15 @@ public class MinioAsyncClient extends BaseS3Client {
     Http.QueryParameters queryParams = new Http.QueryParameters("tagging", "");
     if (args.versionId() != null) queryParams.put("versionId", args.versionId());
     return executeGetAsync(args, null, queryParams)
-        .thenApply(
-            response -> {
-              try {
-                return Xml.unmarshal(Tags.class, response.body().charStream());
-              } catch (XmlParserException e) {
-                throw new CompletionException(e);
-              } finally {
-                response.close();
-              }
-            });
+        .thenApply(response -> {
+          try {
+            return Xml.unmarshal(Tags.class, response.body().charStream());
+          } catch (XmlParserException e) {
+            throw new CompletionException(e);
+          } finally {
+            response.close();
+          }
+        });
   }
 
   /**
@@ -3080,30 +3031,28 @@ public class MinioAsyncClient extends BaseS3Client {
   public CompletableFuture<CORSConfiguration> getBucketCors(GetBucketCorsArgs args) {
     checkArgs(args);
     return executeGetAsync(args, null, new Http.QueryParameters("cors", ""))
-        .exceptionally(
-            e -> {
-              if (e instanceof CompletionException) e = e.getCause();
-              if (e instanceof ErrorResponseException) {
-                if (((ErrorResponseException) e)
-                    .errorResponse()
-                    .code()
-                    .equals("NoSuchCORSConfiguration")) {
-                  return null;
-                }
-              }
-              throw new CompletionException(e);
-            })
-        .thenApply(
-            response -> {
-              if (response == null) return new CORSConfiguration(null);
-              try {
-                return Xml.unmarshal(CORSConfiguration.class, response.body().charStream());
-              } catch (XmlParserException e) {
-                throw new CompletionException(e);
-              } finally {
-                response.close();
-              }
-            });
+        .exceptionally(e -> {
+          if (e instanceof CompletionException) e = e.getCause();
+          if (e instanceof ErrorResponseException) {
+            if (((ErrorResponseException) e)
+                .errorResponse()
+                .code()
+                .equals("NoSuchCORSConfiguration")) {
+              return null;
+            }
+          }
+          throw new CompletionException(e);
+        })
+        .thenApply(response -> {
+          if (response == null) return new CORSConfiguration(null);
+          try {
+            return Xml.unmarshal(CORSConfiguration.class, response.body().charStream());
+          } catch (XmlParserException e) {
+            throw new CompletionException(e);
+          } finally {
+            response.close();
+          }
+        });
   }
 
   /**
@@ -3186,16 +3135,15 @@ public class MinioAsyncClient extends BaseS3Client {
     Http.QueryParameters queryParams = new Http.QueryParameters("acl", "");
     if (args.versionId() != null) queryParams.put("versionId", args.versionId());
     return executeGetAsync(args, null, queryParams)
-        .thenApply(
-            response -> {
-              try {
-                return Xml.unmarshal(AccessControlPolicy.class, response.body().charStream());
-              } catch (XmlParserException e) {
-                throw new CompletionException(e);
-              } finally {
-                response.close();
-              }
-            });
+        .thenApply(response -> {
+          try {
+            return Xml.unmarshal(AccessControlPolicy.class, response.body().charStream());
+          } catch (XmlParserException e) {
+            throw new CompletionException(e);
+          } finally {
+            response.close();
+          }
+        });
   }
 
   /**
@@ -3234,28 +3182,27 @@ public class MinioAsyncClient extends BaseS3Client {
     }
 
     return executeGetAsync(args, headers, queryParams)
-        .thenApply(
-            response -> {
-              try {
-                GetObjectAttributesOutput result =
-                    Xml.unmarshal(GetObjectAttributesOutput.class, response.body().charStream());
+        .thenApply(response -> {
+          try {
+            GetObjectAttributesOutput result =
+                Xml.unmarshal(GetObjectAttributesOutput.class, response.body().charStream());
 
-                String value = response.headers().get("x-amz-delete-marker");
-                if (value != null) result.setDeleteMarker(Boolean.valueOf(value));
-                value = response.headers().get("Last-Modified");
-                if (value != null) {
-                  result.setLastModified(ZonedDateTime.parse(value, Time.HTTP_HEADER_DATE_FORMAT));
-                }
-                result.setVersionId(response.headers().get("x-amz-version-id"));
+            String value = response.headers().get("x-amz-delete-marker");
+            if (value != null) result.setDeleteMarker(Boolean.valueOf(value));
+            value = response.headers().get("Last-Modified");
+            if (value != null) {
+              result.setLastModified(ZonedDateTime.parse(value, Time.HTTP_HEADER_DATE_FORMAT));
+            }
+            result.setVersionId(response.headers().get("x-amz-version-id"));
 
-                return new GetObjectAttributesResponse(
-                    response.headers(), args.bucket(), args.region(), args.object(), result);
-              } catch (XmlParserException e) {
-                throw new CompletionException(e);
-              } finally {
-                response.close();
-              }
-            });
+            return new GetObjectAttributesResponse(
+                response.headers(), args.bucket(), args.region(), args.object(), result);
+          } catch (XmlParserException e) {
+            throw new CompletionException(e);
+          } finally {
+            response.close();
+          }
+        });
   }
 
   /**
@@ -3350,48 +3297,45 @@ public class MinioAsyncClient extends BaseS3Client {
               }
               return baos;
             })
-        .thenCompose(
-            baos -> {
-              Http.Headers headers = args.makeHeaders();
-              headers.put("X-Amz-Meta-Snowball-Auto-Extract", "true");
+        .thenCompose(baos -> {
+          Http.Headers headers = args.makeHeaders();
+          headers.put("X-Amz-Meta-Snowball-Auto-Extract", "true");
 
-              if (args.stagingFilename() == null) {
-                byte[] data = baos.toByteArray();
-                return putObject(new PutObjectAPIArgs(args, data, data.length, headers));
-              }
+          if (args.stagingFilename() == null) {
+            byte[] data = baos.toByteArray();
+            return putObject(new PutObjectAPIArgs(args, data, data.length, headers));
+          }
 
-              long length = Paths.get(args.stagingFilename()).toFile().length();
-              if (length > ObjectWriteArgs.MAX_OBJECT_SIZE) {
-                throw new IllegalArgumentException(
-                    "tarball size " + length + " is more than maximum allowed 5TiB");
-              }
-              final RandomAccessFile file;
-              try {
-                file = new RandomAccessFile(args.stagingFilename(), "r");
-              } catch (IOException e) {
-                throw new CompletionException(new MinioException(e));
-              }
-              return putObject(new PutObjectAPIArgs(args, file, length, headers))
-                  .exceptionally(
-                      e -> {
-                        if (e instanceof CompletionException) e = e.getCause();
-                        try {
-                          file.close();
-                        } catch (IOException ex) {
-                          e.addSuppressed(new MinioException(ex));
-                        }
-                        throw new CompletionException(e);
-                      })
-                  .thenApply(
-                      response -> {
-                        try {
-                          file.close();
-                        } catch (IOException e) {
-                          throw new CompletionException(new MinioException(e));
-                        }
-                        return response;
-                      });
-            });
+          long length = Paths.get(args.stagingFilename()).toFile().length();
+          if (length > ObjectWriteArgs.MAX_OBJECT_SIZE) {
+            throw new IllegalArgumentException(
+                "tarball size " + length + " is more than maximum allowed 5TiB");
+          }
+          final RandomAccessFile file;
+          try {
+            file = new RandomAccessFile(args.stagingFilename(), "r");
+          } catch (IOException e) {
+            throw new CompletionException(new MinioException(e));
+          }
+          return putObject(new PutObjectAPIArgs(args, file, length, headers))
+              .exceptionally(e -> {
+                if (e instanceof CompletionException) e = e.getCause();
+                try {
+                  file.close();
+                } catch (IOException ex) {
+                  e.addSuppressed(new MinioException(ex));
+                }
+                throw new CompletionException(e);
+              })
+              .thenApply(response -> {
+                try {
+                  file.close();
+                } catch (IOException e) {
+                  throw new CompletionException(new MinioException(e));
+                }
+                return response;
+              });
+        });
   }
 
   /**
@@ -3487,24 +3431,23 @@ public class MinioAsyncClient extends BaseS3Client {
               }
             })
         .thenCompose(body -> executePostAsync(args, null, null, new Http.Body(body)))
-        .thenApply(
-            response -> {
-              try {
-                JsonFactory jsonFactory = new JsonFactory();
-                Iterator<PutObjectFanOutResponse.Result> iterator =
-                    OBJECT_MAPPER.readValues(
-                        jsonFactory.createParser(response.body().byteStream()),
-                        PutObjectFanOutResponse.Result.class);
-                List<PutObjectFanOutResponse.Result> results = new ArrayList<>();
-                iterator.forEachRemaining(results::add);
-                return new PutObjectFanOutResponse(
-                    response.headers(), args.bucket(), args.region(), results);
-              } catch (IOException e) {
-                throw new CompletionException(new MinioException(e));
-              } finally {
-                response.close();
-              }
-            });
+        .thenApply(response -> {
+          try {
+            JsonFactory jsonFactory = new JsonFactory();
+            Iterator<PutObjectFanOutResponse.Result> iterator =
+                OBJECT_MAPPER.readValues(
+                    jsonFactory.createParser(response.body().byteStream()),
+                    PutObjectFanOutResponse.Result.class);
+            List<PutObjectFanOutResponse.Result> results = new ArrayList<>();
+            iterator.forEachRemaining(results::add);
+            return new PutObjectFanOutResponse(
+                response.headers(), args.bucket(), args.region(), results);
+          } catch (IOException e) {
+            throw new CompletionException(new MinioException(e));
+          } finally {
+            response.close();
+          }
+        });
   }
 
   /**
@@ -3530,15 +3473,14 @@ public class MinioAsyncClient extends BaseS3Client {
       byte[] data = OBJECT_MAPPER.writeValueAsString(promptArgs).getBytes(StandardCharsets.UTF_8);
       return executePostAsync(
               args, headers, queryParams, new Http.Body(data, data.length, null, null, null))
-          .thenApply(
-              response -> {
-                return new PromptObjectResponse(
-                    response.headers(),
-                    args.bucket(),
-                    args.region(),
-                    args.object(),
-                    response.body().byteStream());
-              });
+          .thenApply(response -> {
+            return new PromptObjectResponse(
+                response.headers(),
+                args.bucket(),
+                args.region(),
+                args.object(),
+                response.body().byteStream());
+          });
     } catch (JsonProcessingException e) {
       return Utils.failedFuture(new MinioException(e));
     }
@@ -3573,31 +3515,30 @@ public class MinioAsyncClient extends BaseS3Client {
             Checksum.makeHeaders(partReader.hashers(), addContentSha256, addSha256Checksum));
       }
       return putObject(new PutObjectAPIArgs(args, buffer, headers))
-          .thenCompose(
-              response -> {
-                long finalWriteOffset = writeOffset + buffer.length();
-                try {
-                  buffer.reset();
-                  if (partReader.partNumber() == partReader.partCount()) {
-                    return CompletableFuture.completedFuture(response);
-                  }
-                  partReader.read(buffer);
-                } catch (MinioException e) {
-                  return Utils.failedFuture(e);
-                }
-                return appendObject(
-                    args,
-                    finalWriteOffset,
-                    partReader,
-                    buffer,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    addContentSha256,
-                    addSha256Checksum);
-              });
+          .thenCompose(response -> {
+            long finalWriteOffset = writeOffset + buffer.length();
+            try {
+              buffer.reset();
+              if (partReader.partNumber() == partReader.partCount()) {
+                return CompletableFuture.completedFuture(response);
+              }
+              partReader.read(buffer);
+            } catch (MinioException e) {
+              return Utils.failedFuture(e);
+            }
+            return appendObject(
+                args,
+                finalWriteOffset,
+                partReader,
+                buffer,
+                null,
+                null,
+                null,
+                null,
+                null,
+                addContentSha256,
+                addSha256Checksum);
+          });
     }
 
     long size = Math.min(length, partSize);
@@ -3620,26 +3561,25 @@ public class MinioAsyncClient extends BaseS3Client {
     }
 
     return putObject(new PutObjectAPIArgs(args, file, size, headers))
-        .thenCompose(
-            response -> {
-              long finalWriteOffset = writeOffset + size;
-              long finalLength = length - size;
-              if (finalLength == 0) {
-                return CompletableFuture.completedFuture(response);
-              }
-              return appendObject(
-                  args,
-                  finalWriteOffset,
-                  null,
-                  null,
-                  null,
-                  finalLength,
-                  file,
-                  partSize,
-                  hashers,
-                  addContentSha256,
-                  addSha256Checksum);
-            });
+        .thenCompose(response -> {
+          long finalWriteOffset = writeOffset + size;
+          long finalLength = length - size;
+          if (finalLength == 0) {
+            return CompletableFuture.completedFuture(response);
+          }
+          return appendObject(
+              args,
+              finalWriteOffset,
+              null,
+              null,
+              null,
+              finalLength,
+              file,
+              partSize,
+              hashers,
+              addContentSha256,
+              addSha256Checksum);
+        });
   }
 
   /**
@@ -3651,126 +3591,121 @@ public class MinioAsyncClient extends BaseS3Client {
   public CompletableFuture<ObjectWriteResponse> appendObject(AppendObjectArgs args) {
     checkArgs(args);
     return headObject(new HeadObjectArgs(args))
-        .thenCompose(
-            response -> {
-              Checksum.Algorithm algorithm = null;
-              if (response.checksumType() != null) {
-                if (response.checksumType() != Checksum.Type.FULL_OBJECT) {
-                  return Utils.failedFuture(
-                      new MinioException(
-                          "append object does not support checksum type "
-                              + response.checksumType()));
-                }
-                Map<Checksum.Algorithm, String> checksums = response.checksums();
-                if (checksums != null && !checksums.isEmpty()) {
-                  algorithm = checksums.keySet().iterator().next();
-                }
-              }
+        .thenCompose(response -> {
+          Checksum.Algorithm algorithm = null;
+          if (response.checksumType() != null) {
+            if (response.checksumType() != Checksum.Type.FULL_OBJECT) {
+              return Utils.failedFuture(
+                  new MinioException(
+                      "append object does not support checksum type " + response.checksumType()));
+            }
+            Map<Checksum.Algorithm, String> checksums = response.checksums();
+            if (checksums != null && !checksums.isEmpty()) {
+              algorithm = checksums.keySet().iterator().next();
+            }
+          }
 
-              long writeOffset = response.size();
+          long writeOffset = response.size();
 
-              long partSize =
-                  args.chunkSize() != null ? args.chunkSize() : ObjectWriteArgs.MIN_MULTIPART_SIZE;
+          long partSize =
+              args.chunkSize() != null ? args.chunkSize() : ObjectWriteArgs.MIN_MULTIPART_SIZE;
 
-              boolean addContentSha256 = !this.baseUrl.isHttps();
-              boolean addSha256Checksum = algorithm == Checksum.Algorithm.SHA256;
-              Checksum.Algorithm[] algorithms;
-              if (addContentSha256 && !addSha256Checksum) {
-                algorithms =
-                    (algorithm != null)
-                        ? new Checksum.Algorithm[] {algorithm, Checksum.Algorithm.SHA256}
-                        : new Checksum.Algorithm[] {Checksum.Algorithm.SHA256};
-              } else {
-                algorithms =
-                    (algorithm != null)
-                        ? new Checksum.Algorithm[] {algorithm}
-                        : new Checksum.Algorithm[0];
-              }
+          boolean addContentSha256 = !this.baseUrl.isHttps();
+          boolean addSha256Checksum = algorithm == Checksum.Algorithm.SHA256;
+          Checksum.Algorithm[] algorithms;
+          if (addContentSha256 && !addSha256Checksum) {
+            algorithms =
+                (algorithm != null)
+                    ? new Checksum.Algorithm[] {algorithm, Checksum.Algorithm.SHA256}
+                    : new Checksum.Algorithm[] {Checksum.Algorithm.SHA256};
+          } else {
+            algorithms =
+                (algorithm != null)
+                    ? new Checksum.Algorithm[] {algorithm}
+                    : new Checksum.Algorithm[0];
+          }
 
-              if (args.stream() != null) {
-                try {
-                  int partCount =
-                      args.length() == null
-                          ? -1
-                          : (int) Math.max((args.length() + partSize - 1) / partSize, 1);
-                  PartReader partReader =
-                      new PartReader(args.stream(), args.length(), partSize, partCount, algorithms);
-                  ByteBuffer buffer =
-                      new ByteBuffer(partReader.partCount() == 1 ? args.length() : partSize);
-                  partReader.read(buffer);
-                  return appendObject(
-                      args,
-                      writeOffset,
-                      partReader,
-                      buffer,
-                      null,
-                      null,
-                      null,
-                      null,
-                      null,
-                      addContentSha256,
-                      addSha256Checksum);
-                } catch (MinioException e) {
-                  return Utils.failedFuture(e);
-                }
-              }
+          if (args.stream() != null) {
+            try {
+              int partCount =
+                  args.length() == null
+                      ? -1
+                      : (int) Math.max((args.length() + partSize - 1) / partSize, 1);
+              PartReader partReader =
+                  new PartReader(args.stream(), args.length(), partSize, partCount, algorithms);
+              ByteBuffer buffer =
+                  new ByteBuffer(partReader.partCount() == 1 ? args.length() : partSize);
+              partReader.read(buffer);
+              return appendObject(
+                  args,
+                  writeOffset,
+                  partReader,
+                  buffer,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  addContentSha256,
+                  addSha256Checksum);
+            } catch (MinioException e) {
+              return Utils.failedFuture(e);
+            }
+          }
 
-              try {
-                Map<Checksum.Algorithm, Checksum.Hasher> hashers =
-                    Checksum.newHasherMap(algorithms);
-                if (args.data() != null) {
-                  return appendObject(
-                      args,
-                      writeOffset,
-                      null,
-                      null,
-                      args.data(),
-                      args.length(),
-                      null,
-                      null,
-                      hashers,
-                      addContentSha256,
-                      addSha256Checksum);
-                }
+          try {
+            Map<Checksum.Algorithm, Checksum.Hasher> hashers = Checksum.newHasherMap(algorithms);
+            if (args.data() != null) {
+              return appendObject(
+                  args,
+                  writeOffset,
+                  null,
+                  null,
+                  args.data(),
+                  args.length(),
+                  null,
+                  null,
+                  hashers,
+                  addContentSha256,
+                  addSha256Checksum);
+            }
 
-                final RandomAccessFile file = new RandomAccessFile(args.filename(), "r");
-                return appendObject(
-                        args,
-                        writeOffset,
-                        null,
-                        null,
-                        null,
-                        args.length(),
-                        file,
-                        partSize,
-                        hashers,
-                        addContentSha256,
-                        addSha256Checksum)
-                    .exceptionally(
-                        e -> {
-                          if (e instanceof CompletionException) e = e.getCause();
-                          try {
-                            file.close();
-                          } catch (IOException ex) {
-                            e.addSuppressed(new MinioException(ex));
-                          }
-                          throw new CompletionException(e);
-                        })
-                    .thenApply(
-                        resp -> {
-                          try {
-                            file.close();
-                          } catch (IOException e) {
-                            throw new CompletionException(new MinioException(e));
-                          }
-                          return resp;
-                        });
-              } catch (MinioException e) {
-                return Utils.failedFuture(e);
-              } catch (IOException e) {
-                return Utils.failedFuture(new MinioException(e));
-              }
-            });
+            final RandomAccessFile file = new RandomAccessFile(args.filename(), "r");
+            return appendObject(
+                    args,
+                    writeOffset,
+                    null,
+                    null,
+                    null,
+                    args.length(),
+                    file,
+                    partSize,
+                    hashers,
+                    addContentSha256,
+                    addSha256Checksum)
+                .exceptionally(e -> {
+                  if (e instanceof CompletionException) e = e.getCause();
+                  try {
+                    file.close();
+                  } catch (IOException ex) {
+                    e.addSuppressed(new MinioException(ex));
+                  }
+                  throw new CompletionException(e);
+                })
+                .thenApply(resp -> {
+                  try {
+                    file.close();
+                  } catch (IOException e) {
+                    throw new CompletionException(new MinioException(e));
+                  }
+                  return resp;
+                });
+          } catch (MinioException e) {
+            return Utils.failedFuture(e);
+          } catch (IOException e) {
+            return Utils.failedFuture(new MinioException(e));
+          }
+        });
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////

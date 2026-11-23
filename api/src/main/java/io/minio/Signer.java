@@ -143,10 +143,9 @@ public class Signer {
         this.canonicalHeaders.put(
             signedHeader,
             headers.values(name).stream()
-                .map(
-                    value -> {
-                      return value.replaceAll("( +)", " ").trim();
-                    })
+                .map(value -> {
+                  return value.replaceAll("( +)", " ").trim();
+                })
                 .collect(Collectors.joining(",")));
       }
     }
