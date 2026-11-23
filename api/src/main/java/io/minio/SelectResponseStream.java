@@ -168,7 +168,6 @@ public class SelectResponseStream extends InputStream {
     if (payloadStream == null) {
       try {
         while (!this.populate()) {}
-        ;
       } catch (EOFException e) {
         return -1;
       } catch (MinioException e) {

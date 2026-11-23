@@ -1042,10 +1042,9 @@ public class TestMinioClient extends TestArgs {
   public void removeObjects(String bucketName, List<ObjectWriteResponse> results) throws Exception {
     List<DeleteRequest.Object> objects =
         results.stream()
-            .map(
-                result -> {
-                  return new DeleteRequest.Object(result.object(), result.versionId());
-                })
+            .map(result -> {
+              return new DeleteRequest.Object(result.object(), result.versionId());
+            })
             .collect(Collectors.toList());
     Exception ex = null;
     for (Result<?> r :
